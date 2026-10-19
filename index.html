@@ -1,0 +1,2306 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThermoLab Merdeka — Media Interaktif Deep Learning Suhu & Konversi Suhu SMP</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                        display: ['"Fredoka"', 'cursive', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+
+        /* Custom Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 12px;
+            border-radius: 9999px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 28px;
+            width: 28px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 4px solid #2563eb;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+            margin-top: -8px;
+            transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 14px rgba(37, 99, 235, 0.6);
+        }
+        input[type=range]::-webkit-slider-thumb:active {
+            transform: scale(1.05);
+        }
+
+        /* Smooth Liquid Thermometer Transition */
+        .thermo-liquid {
+            transition: height 0.28s cubic-bezier(0.34, 1.25, 0.64, 1), background-color 0.3s ease;
+        }
+
+        /* Ambient Glow & Floating Animation */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .anim-float {
+            animation: floatSlow 3.2s ease-in-out infinite;
+        }
+
+        /* Glassmorphism */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-blue-600 selection:text-white relative">
+
+    <!-- Confetti Overlay Canvas -->
+    <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+
+    <!-- TOP HEADER / NAV BAR -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <!-- Brand & Deep Learning Tagline -->
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-rose-500 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
+                        <span class="text-2xl anim-float">🌡️</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 font-display">
+                                ThermoLab <span class="text-blue-600">Merdeka</span>
+                            </h1>
+                            <span class="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md bg-blue-100 text-blue-800 border border-blue-200">
+                                SMP Fase D
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 font-medium hidden sm:flex items-center gap-1.5">
+                            <span class="text-emerald-600 font-bold">● Mindful</span>
+                            <span class="text-slate-300">•</span>
+                            <span class="text-indigo-600 font-bold">● Meaningful</span>
+                            <span class="text-slate-300">•</span>
+                            <span class="text-rose-600 font-bold">● Joyful Learning</span>
+                            <span class="text-slate-400 text-[11px] ml-1">(Deep Learning Kurikulum Merdeka)</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Utility Action Controls -->
+                <div class="flex items-center gap-2">
+                    <!-- Audio Sound Effect Toggle -->
+                    <button onclick="toggleAudio()" id="audioToggleBtn" class="p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1.5 transition" title="Suara Interaktif On/Off">
+                        <span id="audioIcon">🔊</span>
+                        <span class="hidden md:inline" id="audioLabel">Suara: ON</span>
+                    </button>
+
+                    <!-- Virtual Scratchpad Toggle -->
+                    <button onclick="toggleScratchpadModal()" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center gap-1.5 transition shadow-sm">
+                        <span>✏️</span>
+                        <span class="hidden sm:inline">Papan Coretan</span>
+                    </button>
+
+                    <!-- Teacher Guide Modal -->
+                    <button onclick="toggleTeacherModal()" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1.5 transition">
+                        <span>👩‍🏫</span>
+                        <span class="hidden lg:inline">Modul Guru</span>
+                    </button>
+
+                    <!-- Fullscreen Presentation Toggle -->
+                    <button onclick="toggleFullscreen()" class="p-2 sm:px-3 sm:py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1.5 transition" title="Layar Penuh Proyektor Kelas">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                        </svg>
+                        <span id="fullscreenText" class="hidden sm:inline">Layar Penuh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5 STEPPER FLOW NAVIGATION (ALUR DEEP LEARNING) -->
+            <nav class="mt-2.5 pt-2 border-t border-slate-100 overflow-x-auto scrollbar-none">
+                <div class="flex items-center gap-2 min-w-max pb-1">
+                    <button onclick="goToStep(1)" id="stepNav1" class="step-nav-btn flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-blue-600 text-white shadow-sm">
+                        <span class="w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black bg-white text-blue-600 step-idx">1</span>
+                        <span>Pemantik: Apa Itu Suhu?</span>
+                    </button>
+                    <span class="text-slate-300 font-bold text-xs">→</span>
+                    <button onclick="goToStep(2)" id="stepNav2" class="step-nav-btn flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-600">
+                        <span class="w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black bg-slate-200 text-slate-700 step-idx">2</span>
+                        <span>Makna Suhu & Partikel</span>
+                    </button>
+                    <span class="text-slate-300 font-bold text-xs">→</span>
+                    <button onclick="goToStep(3)" id="stepNav3" class="step-nav-btn flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-600">
+                        <span class="w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black bg-slate-200 text-slate-700 step-idx">3</span>
+                        <span>Satuan Internasional (Kelvin)</span>
+                    </button>
+                    <span class="text-slate-300 font-bold text-xs">→</span>
+                    <button onclick="goToStep(4)" id="stepNav4" class="step-nav-btn flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-600">
+                        <span class="w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black bg-slate-200 text-slate-700 step-idx">4</span>
+                        <span>Alat Ukur Termometer</span>
+                    </button>
+                    <span class="text-slate-300 font-bold text-xs">→</span>
+                    <button onclick="goToStep(5)" id="stepNav5" class="step-nav-btn flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-600">
+                        <span class="w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black bg-slate-200 text-slate-700 step-idx">5</span>
+                        <span>Konversi Suhu & Arena Hitung</span>
+                    </button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN INTERACTIVE WORKSPACE -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5">
+
+        <!-- =================================================================
+             ALUR 1: PERTANYAAN PEMANTIK "APA ITU SUHU?" (MINDFUL LEARNING)
+             ================================================================= -->
+        <section id="stepSection1" class="step-panel space-y-5">
+            <!-- Header Card Alur 1 -->
+            <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 rounded-3xl p-6 sm:p-7 text-white shadow-lg relative overflow-hidden">
+                <div class="relative z-10 space-y-2">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur text-xs font-black tracking-wide uppercase">
+                        <span>Alur 1 dari 5</span> • <span>Mindful Learning: Menyadari Miskonsepsi Awal</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold font-display">Pertanyaan Pemantik: "Sebenarnya, Apa Itu Suhu?"</h2>
+                    <p class="text-blue-100 text-xs sm:text-sm max-w-3xl leading-relaxed">
+                        Sebelum kita menghitung rumus atau angka, mari buktikan bersama dengan akal sehat dan sains: <strong>Apakah telapak tangan kita bisa dipercaya sebagai pengukur suhu yang adil dan akurat?</strong> Coba dua eksperimen virtual di bawah!
+                    </p>
+                </div>
+                <!-- Mode Switcher -->
+                <div class="mt-4 flex flex-wrap gap-2 pt-2 border-t border-white/20">
+                    <button onclick="switchAlur1Tab('kelas')" id="btnA1Kelas" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-blue-700 shadow transition flex items-center gap-2">
+                        <span>🪑</span> Eksperimen 1: Benda di Ruang Kelas (25°C)
+                    </button>
+                    <button onclick="switchAlur1Tab('baskom')" id="btnA1Baskom" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white hover:bg-white/10 transition flex items-center gap-2">
+                        <span>🥣</span> Eksperimen 2: Misteri 3 Baskom Air
+                    </button>
+                </div>
+            </div>
+
+            <!-- MODE 1A: EXPERIMEN BENDA DI RUANG KELAS -->
+            <div id="alur1ContentKelas" class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-7 space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900">Eksperimen 1: Sentuh 3 Objek di Ruang Kelas Ber-AC (25°C)</h3>
+                        <p class="text-xs text-slate-500">Ajak siswa menyentuh pipi sendiri, permukaan meja kayu, dan kaki meja besi. Lalu klik tombol di bawah!</p>
+                    </div>
+                    <button onclick="resetTouchExp()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 self-start transition">
+                        🔄 Ulangi Eksperimen
+                    </button>
+                </div>
+
+                <!-- 3 Objek Interaktif Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <!-- Objek 1: Pipi Sendiri -->
+                    <div class="rounded-2xl border-2 border-slate-200 p-5 bg-slate-50/70 hover:border-blue-400 transition flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-700">Objek 1</span>
+                                <span class="text-[11px] text-slate-500 font-semibold">Tubuh Makhluk Hidup</span>
+                            </div>
+                            <div class="h-28 rounded-2xl bg-gradient-to-br from-rose-50 to-orange-100 border border-rose-200 flex flex-col items-center justify-center">
+                                <span class="text-4xl mb-1">😊✋</span>
+                                <span class="text-sm font-bold text-slate-800">Pipi / Dahi Sendiri</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2.5">
+                            <button onclick="touchObject('pipi')" class="w-full py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5">
+                                <span>✋</span> Sentuh Pakai Tangan
+                            </button>
+                            <div id="touchFeedback_pipi" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-950 font-medium">
+                                <strong>Rasa di Tangan:</strong> "Terasa <strong>Hangat</strong> dan nyaman!"
+                            </div>
+
+                            <button onclick="measureObject('pipi')" class="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5">
+                                <span>🌡️</span> Ukur Pakai Termometer
+                            </button>
+                            <div id="measureFeedback_pipi" class="hidden p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-950">
+                                <div class="font-mono text-sm font-black text-rose-600">Suhu Asli: 36,5 °C</div>
+                                <p class="mt-0.5 text-slate-600">Suhu tubuh manusia normal memang sekitar 36°C – 37°C.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Objek 2: Meja Kayu -->
+                    <div class="rounded-2xl border-2 border-slate-200 p-5 bg-slate-50/70 hover:border-blue-400 transition flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800">Objek 2</span>
+                                <span class="text-[11px] text-slate-500 font-semibold">Isolator Panas</span>
+                            </div>
+                            <div class="h-28 rounded-2xl bg-gradient-to-br from-amber-50 to-yellow-100 border border-amber-200 flex flex-col items-center justify-center">
+                                <span class="text-4xl mb-1">🪵✋</span>
+                                <span class="text-sm font-bold text-slate-800">Permukaan Meja Kayu</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2.5">
+                            <button onclick="touchObject('kayu')" class="w-full py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5">
+                                <span>✋</span> Sentuh Pakai Tangan
+                            </button>
+                            <div id="touchFeedback_kayu" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-950 font-medium">
+                                <strong>Rasa di Tangan:</strong> "Terasa <strong>Biasa / Sedikit Adem</strong>."
+                            </div>
+
+                            <button onclick="measureObject('kayu')" class="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5">
+                                <span>🌡️</span> Ukur Pakai Termometer
+                            </button>
+                            <div id="measureFeedback_kayu" class="hidden p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-950">
+                                <div class="font-mono text-sm font-black text-blue-700">Suhu Asli: 25,0 °C</div>
+                                <p class="mt-0.5 text-slate-600">Sesuai suhu ruangan AC kelas. Kayu mengalirkan panas lambat.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Objek 3: Kaki Meja Besi -->
+                    <div class="rounded-2xl border-2 border-slate-200 p-5 bg-slate-50/70 hover:border-blue-400 transition flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-cyan-100 text-cyan-800">Objek 3</span>
+                                <span class="text-[11px] text-slate-500 font-semibold">Konduktor Panas</span>
+                            </div>
+                            <div class="h-28 rounded-2xl bg-gradient-to-br from-slate-200 to-cyan-100 border border-slate-300 flex flex-col items-center justify-center">
+                                <span class="text-4xl mb-1">🔩✋</span>
+                                <span class="text-sm font-bold text-slate-800">Kaki Meja Besi</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2.5">
+                            <button onclick="touchObject('besi')" class="w-full py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5">
+                                <span>✋</span> Sentuh Pakai Tangan
+                            </button>
+                            <div id="touchFeedback_besi" class="hidden p-3 rounded-xl bg-cyan-50 border border-cyan-200 text-xs text-cyan-950 font-medium">
+                                <strong>Rasa di Tangan:</strong> "Brrr! Terasa <strong>DINGIN SEKALI</strong>!"
+                            </div>
+
+                            <button onclick="measureObject('besi')" class="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5">
+                                <span>🌡️</span> Ukur Pakai Termometer
+                            </button>
+                            <div id="measureFeedback_besi" class="hidden p-3 rounded-xl bg-emerald-50 border-2 border-emerald-400 text-xs text-emerald-950">
+                                <div class="font-mono text-sm font-black text-emerald-700">Suhu Asli: 25,0 °C (SAMA DENGAN KAYU!)</div>
+                                <p class="mt-0.5 text-slate-700"><strong>Kejutan Sains:</strong> Besi dan kayu suhunya sama persis (25°C)! Besi terasa dingin karena logam cepat menyerap kalor dari kulit kita.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODE 1B: EXPERIMEN 3 BASKOM AIR -->
+            <div id="alur1ContentBaskom" class="hidden bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-7 space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900">Eksperimen 2: Paradoks 3 Baskom Air</h3>
+                        <p class="text-xs text-slate-500">Bisakah tangan kiri dan tangan kanan sepakat menentukan suhu air di baskom tengah?</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="stepBasin(1)" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition">
+                            1️⃣ Celupkan Kiri & Kanan
+                        </button>
+                        <button onclick="stepBasin(2)" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition">
+                            2️⃣ Pindahkan Bersama ke Tengah!
+                        </button>
+                        <button onclick="stepBasin(0)" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+                            🔄 Reset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stage 3 Baskom -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-end pt-2">
+                    <!-- Baskom Es -->
+                    <div class="rounded-2xl border-2 border-cyan-200 bg-cyan-50/50 p-4 text-center">
+                        <span class="text-[11px] font-black uppercase text-cyan-700 tracking-wider">Baskom A</span>
+                        <div class="font-extrabold text-cyan-900 text-sm mt-0.5">Air Es Dingin (10°C)</div>
+                        <div id="basinHandLeft" class="h-20 flex flex-col items-center justify-center transition-all duration-300">
+                            <span class="text-3xl">🤚</span>
+                            <span class="text-[10px] font-bold text-cyan-800">Tangan Kiri</span>
+                        </div>
+                        <div class="h-20 rounded-b-2xl rounded-t-lg bg-gradient-to-b from-cyan-300 to-cyan-500 border-2 border-cyan-600 flex items-center justify-center text-white text-xs font-bold shadow-inner">
+                            ❄️ Air Es 10°C
+                        </div>
+                    </div>
+
+                    <!-- Baskom Tengah -->
+                    <div class="rounded-2xl border-2 border-emerald-300 bg-emerald-50/50 p-4 text-center relative shadow-sm">
+                        <span class="text-[11px] font-black uppercase text-emerald-700 tracking-wider">Baskom B (Uji Bersama)</span>
+                        <div class="font-extrabold text-emerald-900 text-sm mt-0.5">Air Keran Biasa (28°C)</div>
+                        <div id="basinHandCenter" class="h-20 flex items-center justify-center gap-4 transition-all duration-300 opacity-20">
+                            <div class="flex flex-col items-center">
+                                <span class="text-3xl">🤚</span>
+                                <span id="labelHandLeftCenter" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 mt-0.5">Kiri: ?</span>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <span class="text-3xl">✋</span>
+                                <span id="labelHandRightCenter" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 mt-0.5">Kanan: ?</span>
+                            </div>
+                        </div>
+                        <div class="h-20 rounded-b-2xl rounded-t-lg bg-gradient-to-b from-emerald-300 to-teal-500 border-2 border-teal-600 flex items-center justify-center text-white text-xs font-bold shadow-inner">
+                            💧 Air Keran 28°C
+                        </div>
+                    </div>
+
+                    <!-- Baskom Hangat -->
+                    <div class="rounded-2xl border-2 border-rose-200 bg-rose-50/50 p-4 text-center">
+                        <span class="text-[11px] font-black uppercase text-rose-700 tracking-wider">Baskom C</span>
+                        <div class="font-extrabold text-rose-900 text-sm mt-0.5">Air Hangat (45°C)</div>
+                        <div id="basinHandRight" class="h-20 flex flex-col items-center justify-center transition-all duration-300">
+                            <span class="text-3xl">✋</span>
+                            <span class="text-[10px] font-bold text-rose-800">Tangan Kanan</span>
+                        </div>
+                        <div class="h-20 rounded-b-2xl rounded-t-lg bg-gradient-to-b from-orange-300 to-rose-500 border-2 border-rose-600 flex items-center justify-center text-white text-xs font-bold shadow-inner">
+                            ♨️ Air Hangat 45°C
+                        </div>
+                    </div>
+                </div>
+
+                <div id="basinStatusMsg" class="p-3.5 rounded-2xl bg-slate-100 border border-slate-200 text-xs sm:text-sm text-slate-700 text-center font-medium">
+                    Klik <strong>"1️⃣ Celupkan Kiri & Kanan"</strong> lalu <strong>"2️⃣ Pindahkan Bersama ke Tengah!"</strong>
+                </div>
+            </div>
+
+            <!-- KESIMPULAN BERMAKNA KELAS -->
+            <div class="bg-amber-50/90 rounded-3xl border-2 border-amber-200 p-5 sm:p-6 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <span class="text-[11px] font-black uppercase text-amber-800 tracking-wider">💡 Makna Deep Learning</span>
+                        <h4 class="text-base sm:text-lg font-bold text-slate-900">
+                            Mengapa Indra Peraba Bukan Alat Ukur Suhu yang Baik?
+                        </h4>
+                    </div>
+                    <button onclick="toggleElement('alur1Reveal')" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm shadow transition shrink-0">
+                        Buka Kesimpulan Kelas ➔
+                    </button>
+                </div>
+
+                <div id="alur1Reveal" class="hidden pt-3 border-t border-amber-200 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs sm:text-sm">
+                    <div class="bg-white p-3.5 rounded-2xl border border-rose-200">
+                        <strong class="text-rose-700 flex items-center gap-1.5 mb-1">
+                            <span>❌</span> Indra Peraba (Kualitatif / Perasaan)
+                        </strong>
+                        <p class="text-slate-600 leading-relaxed">
+                            Kulit kita hanya merasakan <strong>laju perpindahan panas</strong>, sangat subjektif, tidak menghasilkan angka pasti, dan bisa membahayakan jika menyentuh benda terlalu panas/dingin.
+                        </p>
+                    </div>
+                    <div class="bg-white p-3.5 rounded-2xl border border-emerald-300">
+                        <strong class="text-emerald-700 flex items-center gap-1.5 mb-1">
+                            <span>✅</span> Suhu & Termometer (Kuantitatif / Objektif)
+                        </strong>
+                        <p class="text-slate-600 leading-relaxed">
+                            Kita membutuhkan <strong>besaran pokok Suhu</strong> yang diukur dengan angka pasti (kuantitatif) menggunakan termometer, agar siapa pun di dunia mendapatkan hasil ukur yang sama dan adil!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- =================================================================
+             ALUR 2: JELASIN SUHU ITU APA (MEANINGFUL: MIKROSKOPIS & MAKROSKOPIS)
+             ================================================================= -->
+        <section id="stepSection2" class="step-panel hidden space-y-5">
+            <!-- Header Alur 2 -->
+            <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 rounded-3xl p-6 sm:p-7 text-white shadow-lg space-y-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur text-xs font-black tracking-wide uppercase">
+                    <span>Alur 2 dari 5</span> • <span>Meaningful Learning: Menyelami Dunia Mikroskopis</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold font-display">Apa Sebenarnya yang Disebut "Suhu"?</h2>
+                <p class="text-indigo-100 text-xs sm:text-sm max-w-3xl leading-relaxed">
+                    Secara kasat mata, suhu adalah <strong>derajat panas atau dinginnya suatu benda</strong>. Namun di dalam benda itu sendiri, apa yang sebenarnya bergerak saat suhu naik? Geser tungku kalor di bawah dan intip partikelnya!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                <!-- Left 7 cols: Particle Canvas Simulator -->
+                <div class="lg:col-span-7 bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-6 flex flex-col justify-between space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-extrabold text-slate-900 text-base sm:text-lg">🔬 Ruang Partikel Atom / Molekul</h3>
+                            <p class="text-xs text-slate-500">Amati bagaimana kecepatan getaran partikel berubah saat suhu diubah!</p>
+                        </div>
+                        <span id="particleStateBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                            Suhu Ruangan (25°C)
+                        </span>
+                    </div>
+
+                    <!-- Canvas Box -->
+                    <div class="relative rounded-2xl overflow-hidden bg-slate-900 border-4 border-slate-800 h-64 sm:h-72 w-full shadow-inner">
+                        <canvas id="particleCanvas" class="w-full h-full block"></canvas>
+                        <!-- HUD Info -->
+                        <div class="absolute top-3 left-3 bg-slate-900/85 backdrop-blur px-3 py-2 rounded-xl border border-slate-700 text-white text-xs space-y-1 pointer-events-none">
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-400">Suhu Partikel:</span>
+                                <span id="hudParticleTemp" class="font-mono font-black text-amber-400 text-sm">25 °C</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-400">Energi Kinetik Rata-rata:</span>
+                                <span id="hudKineticLabel" class="font-bold text-emerald-400">Sedang</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slider Pemanas / Pendingin -->
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2.5">
+                        <div class="flex items-center justify-between text-xs font-bold">
+                            <span class="text-cyan-700 flex items-center gap-1">❄️ Pendingin Es (-30°C)</span>
+                            <span class="text-slate-700 font-extrabold">Geser Tingkat Kalor</span>
+                            <span class="text-rose-600 flex items-center gap-1">🔥 Api Pemanas (140°C)</span>
+                        </div>
+                        <input type="range" id="particleTempSlider" min="-30" max="140" value="25" oninput="changeParticleTemp(this.value)"
+                            class="w-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-rose-500 rounded-lg">
+                        <div class="flex flex-wrap gap-2 justify-center pt-1">
+                            <button onclick="setParticlePreset(-20)" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition">❄️ Beku (-20°C)</button>
+                            <button onclick="setParticlePreset(25)" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition">🏠 Normal (25°C)</button>
+                            <button onclick="setParticlePreset(70)" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-100 text-amber-800 hover:bg-amber-200 transition">♨️ Hangat (70°C)</button>
+                            <button onclick="setParticlePreset(130)" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 hover:bg-rose-200 transition">🔥 Sangat Panas (130°C)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right 5 cols: Definisi & Kuis Cepat -->
+                <div class="lg:col-span-5 flex flex-col justify-between space-y-4">
+                    <!-- 2 Sudut Pandang -->
+                    <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-6 space-y-3.5">
+                        <h3 class="font-extrabold text-slate-900 text-base sm:text-lg">📌 2 Sudut Pandang Suhu di SMP</h3>
+                        <div class="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-100 space-y-1">
+                            <div class="text-[11px] font-black uppercase text-indigo-700 tracking-wider">1. Kacamata Makroskopis (Mata Kita)</div>
+                            <p class="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed">
+                                <strong>Suhu</strong> adalah ukuran kuantitatif dari <strong>derajat panas atau dinginnya</strong> suatu benda.
+                            </p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-rose-50 border border-rose-100 space-y-1">
+                            <div class="text-[11px] font-black uppercase text-rose-700 tracking-wider">2. Kacamata Mikroskopis (Fisika Zat)</div>
+                            <p class="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed">
+                                <strong>Suhu</strong> adalah cerminan dari <strong>energi kinetik (kecepatan gerak/getaran) rata-rata partikel</strong> di dalam benda. Benda makin panas = partikel bergetar makin kencang!
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Kuis Cepat Pemahaman Siswa -->
+                    <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-6 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-bold text-slate-900 text-sm">⚡ Cek Pemahaman Kilat</h4>
+                            <span class="text-[11px] font-bold text-indigo-600">Klik jawabanmu:</span>
+                        </div>
+                        <p class="text-xs text-slate-700 font-medium leading-relaxed">
+                            Ketika semangkuk sup panas (85°C) dibiarkan di atas meja sampai dingin (25°C), apa yang sebenarnya terjadi pada partikel-partikel sup tersebut?
+                        </p>
+                        <div class="space-y-2">
+                            <button onclick="checkA2Quiz('A')" class="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 text-xs font-semibold text-slate-700 transition">
+                                A. Ukuran partikelnya mengecil menjadi mini
+                            </button>
+                            <button onclick="checkA2Quiz('B')" class="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 text-xs font-semibold text-slate-700 transition">
+                                B. Gerak getaran partikel melambat (energi kinetik rata-rata berkurang)
+                            </button>
+                            <button onclick="checkA2Quiz('C')" class="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 text-xs font-semibold text-slate-700 transition">
+                                C. Jumlah partikel di dalam mangkuk berkurang banyak
+                            </button>
+                        </div>
+                        <div id="quizA2Feedback" class="hidden p-3 rounded-xl text-xs font-medium"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- =================================================================
+             ALUR 3: SATUAN INTERNASIONAL (SI) SUHU (KELVIN & NOL MUTLAK)
+             ================================================================= -->
+        <section id="stepSection3" class="step-panel hidden space-y-5">
+            <!-- Header Alur 3 -->
+            <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 rounded-3xl p-6 sm:p-7 text-white shadow-lg space-y-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur text-xs font-black tracking-wide uppercase">
+                    <span>Alur 3 dari 5</span> • <span>Meaningful & Menalar: Mengapa Kelvin?</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold font-display">Satuan Internasional (SI) Suhu</h2>
+                <p class="text-emerald-100 text-xs sm:text-sm max-w-3xl leading-relaxed">
+                    Di Indonesia kita memakai <strong>Celcius (°C)</strong>, sedangkan di Amerika sering memakai <strong>Fahrenheit (°F)</strong>. Namun tahukah kamu, ilmuwan seluruh dunia menyepakati <strong>Kelvin (K)</strong> sebagai Satuan Internasional (SI)? Mari kita cari tahu alasannya!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                <!-- Left 5 cols: Polling Tebak Satuan -->
+                <div class="lg:col-span-5 bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-6 flex flex-col justify-between space-y-4">
+                    <div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800">🗳️ Polling Kelas Cepat</span>
+                        <h3 class="font-extrabold text-slate-900 text-base mt-1">Mana Satuan Internasional (SI) Resmi untuk Suhu?</h3>
+                        <p class="text-xs text-slate-500">Minta siswa angkat tangan atau klik salah satu pilihan berikut!</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="voteSIScale('C')" id="btnVoteC" class="p-3.5 rounded-2xl border-2 border-slate-200 hover:border-blue-400 text-left transition flex flex-col justify-between">
+                            <span class="text-2xl font-black text-slate-800">°C</span>
+                            <span class="text-xs font-bold text-slate-700 mt-1">Celcius</span>
+                            <span id="voteCountC" class="text-[11px] text-slate-400 mt-1 font-semibold">0 suara</span>
+                        </button>
+                        <button onclick="voteSIScale('F')" id="btnVoteF" class="p-3.5 rounded-2xl border-2 border-slate-200 hover:border-blue-400 text-left transition flex flex-col justify-between">
+                            <span class="text-2xl font-black text-slate-800">°F</span>
+                            <span class="text-xs font-bold text-slate-700 mt-1">Fahrenheit</span>
+                            <span id="voteCountF" class="text-[11px] text-slate-400 mt-1 font-semibold">0 suara</span>
+                        </button>
+                        <button onclick="voteSIScale('R')" id="btnVoteR" class="p-3.5 rounded-2xl border-2 border-slate-200 hover:border-blue-400 text-left transition flex flex-col justify-between">
+                            <span class="text-2xl font-black text-slate-800">°R</span>
+                            <span class="text-xs font-bold text-slate-700 mt-1">Reamur</span>
+                            <span id="voteCountR" class="text-[11px] text-slate-400 mt-1 font-semibold">0 suara</span>
+                        </button>
+                        <button onclick="voteSIScale('K')" id="btnVoteK" class="p-3.5 rounded-2xl border-2 border-slate-200 hover:border-blue-400 text-left transition flex flex-col justify-between">
+                            <span class="text-2xl font-black text-slate-800">K</span>
+                            <span class="text-xs font-bold text-slate-700 mt-1">Kelvin</span>
+                            <span id="voteCountK" class="text-[11px] text-slate-400 mt-1 font-semibold">0 suara</span>
+                        </button>
+                    </div>
+
+                    <div id="revealSIExplanation" class="hidden p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-300 space-y-2 text-xs sm:text-sm">
+                        <div class="font-black text-emerald-900 text-sm flex items-center gap-1.5">
+                            <span>🏆</span> Jawabannya adalah: KELVIN (K)!
+                        </div>
+                        <p class="text-emerald-800 text-xs leading-relaxed">
+                            <strong>Aturan Penulisan Kurikulum Merdeka:</strong> Satuan Kelvin <strong>TIDAK menggunakan simbol derajat (°)</strong>. Jadi ditulis <strong>300 K</strong> (bukan 300°K).
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right 7 cols: Absolute Zero Simulator -->
+                <div class="lg:col-span-7 bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-6 space-y-4">
+                    <div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-indigo-100 text-indigo-800">🌌 Misteri Nol Mutlak (0 Kelvin)</span>
+                        <h3 class="font-extrabold text-slate-900 text-base sm:text-lg mt-1">Mengapa Kelvin Dipilih, Bukan Celcius?</h3>
+                        <p class="text-xs text-slate-600">
+                            Tarik slider suhu ekstrem di bawah hingga mentok ke kiri (<strong>-273°C</strong>) dan perhatikan perbedaan angka Celcius vs Kelvin!
+                        </p>
+                    </div>
+
+                    <!-- Metric Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="p-3.5 rounded-2xl bg-slate-100 border border-slate-200 text-center">
+                            <div class="text-[11px] font-bold text-slate-500 uppercase">Skala Celcius</div>
+                            <div id="displayZeroC" class="font-mono text-2xl font-black text-blue-600 mt-0.5">27 °C</div>
+                            <div id="displayZeroCNote" class="text-[10px] text-slate-500 font-medium">Bisa bernilai negatif (-)</div>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-center">
+                            <div class="text-[11px] font-bold text-emerald-800 uppercase">Skala Kelvin (SI)</div>
+                            <div id="displayZeroK" class="font-mono text-2xl font-black text-emerald-700 mt-0.5">300 K</div>
+                            <div class="text-[10px] text-emerald-700 font-bold">Selalu Positif (Mulai dari 0 K)</div>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-900 text-white text-center flex flex-col justify-center">
+                            <div class="text-[11px] font-bold text-slate-400 uppercase">Kondisi Partikel</div>
+                            <div id="displayZeroParticle" class="text-xs font-black text-amber-400 mt-0.5">Bergerak Normal</div>
+                            <div id="displayZeroPhenom" class="text-[10px] text-slate-300">Suhu ruang sehari-hari</div>
+                        </div>
+                    </div>
+
+                    <!-- Extreme Slider -->
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2.5">
+                        <div class="flex justify-between text-[11px] font-bold">
+                            <span class="text-indigo-900">🌌 Nol Mutlak: -273°C (0 K)</span>
+                            <span class="text-cyan-700">Es: 0°C (273 K)</span>
+                            <span class="text-rose-600">Mendidih: 100°C (373 K)</span>
+                        </div>
+                        <input type="range" id="zeroSlider" min="-273" max="100" value="27" oninput="changeZeroSim(this.value)"
+                            class="w-full bg-gradient-to-r from-indigo-950 via-cyan-400 to-rose-500 rounded-lg">
+                        <div class="flex flex-wrap gap-2 justify-center pt-1">
+                            <button onclick="setZeroPreset(-273)" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-900 text-white hover:bg-indigo-800 transition">🌌 Nol Mutlak (-273°C / 0 K)</button>
+                            <button onclick="setZeroPreset(-196)" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-100 text-indigo-800 hover:bg-indigo-200 transition">❄️ Nitrogen Cair (-196°C)</button>
+                            <button onclick="setZeroPreset(0)" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition">🧊 Es Mencair (0°C)</button>
+                            <button onclick="setZeroPreset(100)" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 hover:bg-rose-200 transition">♨️ Mendidih (100°C)</button>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs text-indigo-950 leading-relaxed">
+                        <strong>Kunci Pemahaman Bermakna:</strong> Pada skala Celcius, angka 0°C hanyalah titik beku air es (masih banyak suhu yang lebih dingin, misal kutub utara -40°C). Sedangkan pada <strong>0 Kelvin (-273°C)</strong>, partikel materi <strong>berhenti total bergerak</strong>! Karena tidak ada suhu yang lebih dingin dari 0 K, skala Kelvin <strong>tidak pernah punya angka negatif</strong>, sehingga memudahkan perhitungan rumus fisika tanpa takut angka minus.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- =================================================================
+             ALUR 4: ALAT UKUR SUHU (TERMOMETER & SKALA)
+             ================================================================= -->
+        <section id="stepSection4" class="step-panel hidden space-y-5">
+            <!-- Header Alur 4 -->
+            <div class="bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-700 rounded-3xl p-6 sm:p-7 text-white shadow-lg space-y-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur text-xs font-black tracking-wide uppercase">
+                    <span>Alur 4 dari 5</span> • <span>Observasi Alat: Kesesuaian Pengukuran Termometer</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold font-display">Alat Ukur Suhu: Termometer</h2>
+                <p class="text-cyan-100 text-xs sm:text-sm max-w-3xl leading-relaxed">
+                    Alat ukur suhu yang baku disebut <strong>Termometer</strong>. Termometer memanfaatkan prinsip <em>sifat termometrik zat</em> (misal zat cair yang memuai jika dipanaskan). Apakah termometer badan bisa dipakai mengukur air mendidih? Uji langsung di lab simulasi ini!
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-7 space-y-5">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                    <!-- Step 1: Pilih Jenis Termometer (5 cols) -->
+                    <div class="lg:col-span-5 space-y-2.5">
+                        <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">1</span>
+                            Pilih Jenis Termometer:
+                        </h3>
+
+                        <div class="space-y-2" id="thermoToolButtons">
+                            <button onclick="pickToolThermo('klinis')" id="btnToolKlinis" class="w-full p-3 rounded-2xl border-2 border-blue-600 bg-blue-50/70 text-left transition flex items-center justify-between">
+                                <div>
+                                    <div class="font-bold text-slate-900 text-xs sm:text-sm">🩺 Termometer Klinis (Badan)</div>
+                                    <div class="text-[11px] text-slate-600 font-mono">Batas: <strong>35°C s.d. 42°C</strong></div>
+                                </div>
+                                <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-blue-600 text-white">Dipilih</span>
+                            </button>
+
+                            <button onclick="pickToolThermo('ruangan')" id="btnToolRuangan" class="w-full p-3 rounded-2xl border-2 border-slate-200 hover:border-blue-300 text-left transition flex items-center justify-between">
+                                <div>
+                                    <div class="font-bold text-slate-900 text-xs sm:text-sm">🏠 Termometer Dinding / Ruangan</div>
+                                    <div class="text-[11px] text-slate-600 font-mono">Batas: <strong>-30°C s.d. 50°C</strong></div>
+                                </div>
+                            </button>
+
+                            <button onclick="pickToolThermo('lab')" id="btnToolLab" class="w-full p-3 rounded-2xl border-2 border-slate-200 hover:border-blue-300 text-left transition flex items-center justify-between">
+                                <div>
+                                    <div class="font-bold text-slate-900 text-xs sm:text-sm">🧪 Termometer Laboratorium</div>
+                                    <div class="text-[11px] text-slate-600 font-mono">Batas: <strong>-10°C s.d. 110°C</strong></div>
+                                </div>
+                            </button>
+
+                            <button onclick="pickToolThermo('pirometer')" id="btnToolPirometer" class="w-full p-3 rounded-2xl border-2 border-slate-200 hover:border-blue-300 text-left transition flex items-center justify-between">
+                                <div>
+                                    <div class="font-bold text-slate-900 text-xs sm:text-sm">🔫 Termometer Inframerah / Pirometer</div>
+                                    <div class="text-[11px] text-slate-600 font-mono">Batas: <strong>-50°C s.d. 600°C+</strong></div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Pilih Objek Target & Live Status (7 cols) -->
+                    <div class="lg:col-span-7 space-y-4">
+                        <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">2</span>
+                            Klik Objek yang Hendak Diukur:
+                        </h3>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            <button onclick="pickTargetObject('es')" id="btnTargetEs" class="p-3 rounded-2xl border-2 border-slate-200 hover:border-cyan-400 bg-slate-50 text-center transition">
+                                <div class="text-2xl mb-0.5">🧊</div>
+                                <div class="font-bold text-xs text-slate-800">Es Mencair</div>
+                                <div class="text-[10px] text-cyan-700 font-mono font-bold">0 °C</div>
+                            </button>
+                            <button onclick="pickTargetObject('demam')" id="btnTargetDemam" class="p-3 rounded-2xl border-2 border-blue-500 bg-blue-50 text-center transition">
+                                <div class="text-2xl mb-0.5">🤒</div>
+                                <div class="font-bold text-xs text-slate-800">Adik Demam</div>
+                                <div class="text-[10px] text-rose-600 font-mono font-bold">38,5 °C</div>
+                            </button>
+                            <button onclick="pickTargetObject('mendidih')" id="btnTargetMendidih" class="p-3 rounded-2xl border-2 border-slate-200 hover:border-rose-400 bg-slate-50 text-center transition">
+                                <div class="text-2xl mb-0.5">🍲</div>
+                                <div class="font-bold text-xs text-slate-800">Air Mendidih</div>
+                                <div class="text-[10px] text-rose-600 font-mono font-bold">100 °C</div>
+                            </button>
+                            <button onclick="pickTargetObject('besi')" id="btnTargetBesi" class="p-3 rounded-2xl border-2 border-slate-200 hover:border-orange-500 bg-slate-50 text-center transition">
+                                <div class="text-2xl mb-0.5">🔥</div>
+                                <div class="font-bold text-xs text-slate-800">Besi Menempa</div>
+                                <div class="text-[10px] text-orange-600 font-mono font-bold">450 °C</div>
+                            </button>
+                        </div>
+
+                        <!-- Live Hasil Pengujian Termometer -->
+                        <div id="thermoTestCard" class="p-4 sm:p-5 rounded-2xl border-2 border-emerald-300 bg-emerald-50 space-y-2 transition-all">
+                            <div class="flex items-center justify-between">
+                                <span id="thermoResultBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-600 text-white">✅ PENGUKURAN AMAN & SESUAI</span>
+                                <span id="thermoRangeLabel" class="font-mono text-xs font-bold text-slate-600">Rentang: 35°C – 42°C</span>
+                            </div>
+                            <h4 id="thermoResultTitle" class="text-base font-extrabold text-slate-900">Terukur: 38,5 °C pada Adik Demam</h4>
+                            <p id="thermoResultDesc" class="text-xs text-slate-700 leading-relaxed">
+                                Termometer klinis dirancang dengan pipa kapiler sempit berlekuk agar suhu tubuh bisa dibaca dengan sangat teliti.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jembatan ke Alur 5 -->
+            <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-3xl p-5 sm:p-6 text-white shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <span class="px-2.5 py-0.5 rounded-full bg-white/25 text-[10px] font-black uppercase">🌉 Jembatan Menuju Alur 5</span>
+                    <h3 class="text-lg sm:text-xl font-extrabold font-display">Benda yang Sama, Angka Berbeda: Bagaimana Mengubahnya?</h3>
+                    <p class="text-amber-100 text-xs sm:text-sm max-w-2xl leading-relaxed">
+                        Saat air mendidih, Celcius menunjuk <strong>100°C</strong>, Reamur <strong>80°R</strong>, Fahrenheit <strong>212°F</strong>, dan Kelvin <strong>373 K</strong>. Ayo masuk ke Lab Konversi untuk menemukan rahasia perbandingannya!
+                    </p>
+                </div>
+                <button onclick="goToStep(5)" class="px-5 py-3 rounded-2xl bg-white text-orange-700 hover:bg-amber-50 font-black text-xs sm:text-sm shadow-md shrink-0 transition flex items-center gap-2">
+                    <span>Masuk ke Lab Konversi (Alur 5)</span> <span>➔</span>
+                </button>
+            </div>
+        </section>
+
+
+        <!-- =================================================================
+             ALUR 5: KONVERSI SUHU & ARENA HITUNG MANDIRI (CORE DEEP LEARNING)
+             ================================================================= -->
+        <section id="stepSection5" class="step-panel hidden space-y-5">
+            <!-- Header Alur 5 dengan Sub-Tab Navigator -->
+            <div class="bg-gradient-to-r from-blue-700 via-indigo-700 to-rose-600 rounded-3xl p-5 sm:p-7 text-white shadow-lg space-y-4">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur text-xs font-black tracking-wide uppercase">
+                            <span>Alur 5 dari 5</span> • <span>Joyful & Meaningful: Arena Hitung Mandiri</span>
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold font-display">Laboratorium Konversi Suhu 3M</h2>
+                        <p class="text-blue-100 text-xs sm:text-sm max-w-3xl leading-relaxed mt-1">
+                            Tanpa perlu menghafal 12 rumus terpisah! Cukup amati <strong>Titik Tetap Bawah</strong> dan <strong>Titik Tetap Atas</strong> untuk menemukan satu pola kunci perbandingan rasio.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 4 Sub-Tabs Alur 5 -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-900/35 p-1.5 rounded-2xl border border-white/15">
+                    <button onclick="switchA5Tab('lab')" id="tabA5Btn_lab" class="py-2.5 px-3 rounded-xl text-xs font-extrabold bg-white text-blue-800 shadow transition flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xs shrink-0">1</span>
+                        <span class="truncate">A. Simulasi 4 Termometer</span>
+                    </button>
+                    <button onclick="switchA5Tab('kalkulator')" id="tabA5Btn_kalkulator" class="py-2.5 px-3 rounded-xl text-xs font-extrabold text-white hover:bg-white/10 transition flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-white/20 text-white flex items-center justify-center font-black text-xs shrink-0">2</span>
+                        <span class="truncate">B. Bedah Rumus Langkah</span>
+                    </button>
+                    <button onclick="switchA5Tab('tantangan')" id="tabA5Btn_tantangan" class="py-2.5 px-3 rounded-xl text-xs font-extrabold text-white hover:bg-white/10 transition flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-rose-500 text-white flex items-center justify-center font-black text-xs shrink-0">🔥</span>
+                        <span class="truncate">C. Arena Hitung Mandiri</span>
+                    </button>
+                    <button onclick="switchA5Tab('kreasi')" id="tabA5Btn_kreasi" class="py-2.5 px-3 rounded-xl text-xs font-extrabold text-white hover:bg-white/10 transition flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-white/20 text-white flex items-center justify-center font-black text-xs shrink-0">4</span>
+                        <span class="truncate">D. Termometer Kreasi X</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SUB-TAB 5A: SIMULASI 4 TERMOMETER SEJAJAR & PENEMUAN RASIO
+                 ================================================================= -->
+            <div id="a5SubContent_lab" class="space-y-5">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                    <!-- 7 cols: 4 Parallel Thermometer Columns -->
+                    <div class="lg:col-span-7 bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-extrabold text-slate-900 text-base sm:text-lg">🔬 Simulasi 4 Skala Termometer Sejajar</h3>
+                                <p class="text-xs text-slate-500">Tinggi kolom cairan keempatnya selalu setara pada zat yang sama!</p>
+                            </div>
+                            <span id="labPhaseBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                                💧 Air Cair (25°C)
+                            </span>
+                        </div>
+
+                        <!-- 4 Parallel Thermometer Stage -->
+                        <div class="relative bg-slate-900 rounded-2xl p-4 sm:p-6 text-white border-4 border-slate-800 overflow-hidden shadow-inner">
+                            <!-- Reference Line: Titik Didih (Atas) -->
+                            <div class="absolute left-3 right-3 border-b-2 border-dashed border-rose-400/80 z-10 pointer-events-none" style="bottom: 81%;">
+                                <span class="bg-rose-600 text-white text-[9px] sm:text-[11px] font-bold px-2 py-0.5 rounded-t-md">
+                                    Titik Tetap Atas (Air Mendidih): 100°C | 80°R | 212°F | 373 K
+                                </span>
+                            </div>
+
+                            <!-- Reference Line: Titik Beku (Bawah) -->
+                            <div class="absolute left-3 right-3 border-b-2 border-dashed border-cyan-400/80 z-10 pointer-events-none" style="bottom: 24%;">
+                                <span class="bg-cyan-600 text-white text-[9px] sm:text-[11px] font-bold px-2 py-0.5 rounded-t-md">
+                                    Titik Tetap Bawah (Es Mencair): 0°C | 0°R | 32°F | 273 K
+                                </span>
+                            </div>
+
+                            <!-- 4 Thermometer Columns -->
+                            <div class="grid grid-cols-4 gap-2 sm:gap-4 pt-7 pb-2 relative z-20 h-72 sm:h-80 items-end">
+                                <!-- Celcius -->
+                                <div class="flex flex-col items-center h-full justify-end">
+                                    <div class="font-mono text-xs sm:text-base font-black text-rose-400 bg-slate-800/90 px-2 py-0.5 rounded-lg border border-slate-700 mb-1.5" id="valColC">25 °C</div>
+                                    <div class="w-6 sm:w-8 h-48 sm:h-52 bg-slate-800 rounded-t-full border-2 border-slate-600 relative overflow-hidden flex items-end p-0.5">
+                                        <div id="liquidColC" class="w-full rounded-t-full thermo-liquid bg-gradient-to-t from-blue-500 via-rose-500 to-rose-400" style="height: 35%;"></div>
+                                    </div>
+                                    <div class="w-9 h-9 sm:w-11 sm:h-11 -mt-2 rounded-full bg-rose-500 border-4 border-slate-700 flex items-center justify-center font-black text-xs shadow">°C</div>
+                                    <span class="text-[11px] font-bold text-slate-300 mt-1">Celcius</span>
+                                    <span class="text-[10px] text-slate-400">Rentang: 100</span>
+                                </div>
+
+                                <!-- Reamur -->
+                                <div class="flex flex-col items-center h-full justify-end">
+                                    <div class="font-mono text-xs sm:text-base font-black text-amber-400 bg-slate-800/90 px-2 py-0.5 rounded-lg border border-slate-700 mb-1.5" id="valColR">20 °R</div>
+                                    <div class="w-6 sm:w-8 h-48 sm:h-52 bg-slate-800 rounded-t-full border-2 border-slate-600 relative overflow-hidden flex items-end p-0.5">
+                                        <div id="liquidColR" class="w-full rounded-t-full thermo-liquid bg-gradient-to-t from-blue-500 via-amber-500 to-amber-400" style="height: 35%;"></div>
+                                    </div>
+                                    <div class="w-9 h-9 sm:w-11 sm:h-11 -mt-2 rounded-full bg-amber-500 border-4 border-slate-700 flex items-center justify-center font-black text-xs shadow">°R</div>
+                                    <span class="text-[11px] font-bold text-slate-300 mt-1">Reamur</span>
+                                    <span class="text-[10px] text-slate-400">Rentang: 80</span>
+                                </div>
+
+                                <!-- Fahrenheit -->
+                                <div class="flex flex-col items-center h-full justify-end">
+                                    <div class="font-mono text-xs sm:text-base font-black text-purple-400 bg-slate-800/90 px-2 py-0.5 rounded-lg border border-slate-700 mb-1.5" id="valColF">77 °F</div>
+                                    <div class="w-6 sm:w-8 h-48 sm:h-52 bg-slate-800 rounded-t-full border-2 border-slate-600 relative overflow-hidden flex items-end p-0.5">
+                                        <div id="liquidColF" class="w-full rounded-t-full thermo-liquid bg-gradient-to-t from-blue-500 via-purple-500 to-purple-400" style="height: 35%;"></div>
+                                    </div>
+                                    <div class="w-9 h-9 sm:w-11 sm:h-11 -mt-2 rounded-full bg-purple-500 border-4 border-slate-700 flex items-center justify-center font-black text-xs shadow">°F</div>
+                                    <span class="text-[11px] font-bold text-slate-300 mt-1">Fahrenheit</span>
+                                    <span class="text-[10px] text-slate-400">Rentang: 180</span>
+                                </div>
+
+                                <!-- Kelvin -->
+                                <div class="flex flex-col items-center h-full justify-end">
+                                    <div class="font-mono text-xs sm:text-base font-black text-emerald-400 bg-slate-800/90 px-2 py-0.5 rounded-lg border border-slate-700 mb-1.5" id="valColK">298 K</div>
+                                    <div class="w-6 sm:w-8 h-48 sm:h-52 bg-slate-800 rounded-t-full border-2 border-slate-600 relative overflow-hidden flex items-end p-0.5">
+                                        <div id="liquidColK" class="w-full rounded-t-full thermo-liquid bg-gradient-to-t from-blue-500 via-emerald-500 to-emerald-400" style="height: 35%;"></div>
+                                    </div>
+                                    <div class="w-9 h-9 sm:w-11 sm:h-11 -mt-2 rounded-full bg-emerald-500 border-4 border-slate-700 flex items-center justify-center font-black text-xs shadow">K</div>
+                                    <span class="text-[11px] font-bold text-slate-300 mt-1">Kelvin (SI)</span>
+                                    <span class="text-[10px] text-slate-400">Rentang: 100</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Slider Suhu Lab -->
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2.5">
+                            <div class="flex items-center justify-between text-xs font-bold">
+                                <span class="text-cyan-700">❄️ -20°C (Beku)</span>
+                                <span class="text-slate-800">Geser Suhu Pemanas/Pendingin</span>
+                                <span class="text-rose-600">🔥 110°C (Mendidih)</span>
+                            </div>
+                            <input type="range" id="sliderLabThermos" min="-20" max="110" step="1" value="25" oninput="changeLabThermos(this.value)"
+                                class="w-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-rose-500 rounded-lg">
+                            <div class="flex flex-wrap gap-2 justify-center pt-1">
+                                <button onclick="changeLabThermos(0)" class="px-3 py-1 rounded-xl text-xs font-bold bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition">🧊 Titik Beku (0°C)</button>
+                                <button onclick="changeLabThermos(25)" class="px-3 py-1 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition">🏠 Suhu Ruang (25°C)</button>
+                                <button onclick="changeLabThermos(37)" class="px-3 py-1 rounded-xl text-xs font-bold bg-amber-100 text-amber-800 hover:bg-amber-200 transition">🧍 Suhu Tubuh (37°C)</button>
+                                <button onclick="changeLabThermos(100)" class="px-3 py-1 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 hover:bg-rose-200 transition">♨️ Titik Didih (100°C)</button>
+                                <button onclick="changeLabThermos(-40)" class="px-3 py-1 rounded-xl text-xs font-bold bg-purple-100 text-purple-800 hover:bg-purple-200 transition">✨ Sama C & F (-40°)</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5 cols: Tabel Rasio 5:4:9:5 & Rahasia Titik Tetap Bawah -->
+                    <div class="lg:col-span-5 bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-6 flex flex-col justify-between space-y-4">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-extrabold text-slate-900 text-base">🔍 Menemukan Rasio Sakti (Niteni)</h3>
+                                <button onclick="toggleA5RatioRow()" id="btnA5Simplify" class="px-3 py-1 rounded-xl text-xs font-extrabold bg-indigo-600 hover:bg-indigo-700 text-white shadow transition">
+                                    ✨ Bagi 20
+                                </button>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs text-center border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-100 text-slate-700 font-bold">
+                                            <th class="p-2 rounded-tl-xl text-left">Titik & Selisih</th>
+                                            <th class="p-2 text-rose-600 font-black">°C</th>
+                                            <th class="p-2 text-amber-600 font-black">°R</th>
+                                            <th class="p-2 text-purple-600 font-black">°F</th>
+                                            <th class="p-2 rounded-tr-xl text-emerald-600 font-black">K</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 font-mono">
+                                        <tr>
+                                            <td class="p-2 text-left font-sans font-semibold text-slate-600">Titik Didih (Atas)</td>
+                                            <td class="p-2 font-bold">100</td>
+                                            <td class="p-2 font-bold">80</td>
+                                            <td class="p-2 font-bold">212</td>
+                                            <td class="p-2 font-bold">373</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-2 text-left font-sans font-semibold text-slate-600">Titik Beku (Bawah)</td>
+                                            <td class="p-2 font-bold">0</td>
+                                            <td class="p-2 font-bold">0</td>
+                                            <td class="p-2 font-bold text-purple-700 bg-purple-50">32</td>
+                                            <td class="p-2 font-bold text-emerald-700 bg-emerald-50">273</td>
+                                        </tr>
+                                        <tr class="bg-slate-50">
+                                            <td class="p-2 text-left font-sans font-bold text-slate-800">Rentang Skala (Selisih)</td>
+                                            <td class="p-2 font-black">100</td>
+                                            <td class="p-2 font-black">80</td>
+                                            <td class="p-2 font-black">180</td>
+                                            <td class="p-2 font-black">100</td>
+                                        </tr>
+                                        <tr id="rowA5Ratio" class="bg-indigo-50 text-indigo-950">
+                                            <td class="p-2 text-left font-sans font-black">Rasio Sederhana (÷ 20)</td>
+                                            <td class="p-2 text-base font-black text-rose-600" id="cellRatioC">?</td>
+                                            <td class="p-2 text-base font-black text-amber-600" id="cellRatioR">?</td>
+                                            <td class="p-2 text-base font-black text-purple-600" id="cellRatioF">?</td>
+                                            <td class="p-2 text-base font-black text-emerald-600" id="cellRatioK">?</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-950 space-y-1.5 leading-relaxed">
+                                <div class="font-extrabold flex items-center gap-1.5">
+                                    <span>🔑</span> Kunci Anti-Lupa Anak SMP:
+                                </div>
+                                <p>
+                                    Rasio perbandingannya adalah <strong class="font-mono text-sm bg-amber-100 px-1.5 py-0.5 rounded">C : R : (F - 32) : (K - 273) = 5 : 4 : 9 : 5</strong>.
+                                </p>
+                                <p class="text-slate-700">
+                                    Kenapa Fahrenheit harus dikurangi 32? Karena titik bekunya mulai dari 32. Kenapa Kelvin harus dikurangi 273? Karena titik bekunya mulai dari 273!
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Shortcut CTA ke Tantangan -->
+                        <div class="pt-2">
+                            <button onclick="switchA5Tab('tantangan')" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2">
+                                <span>🎯</span> <span>Langsung Uji Kemampuan di Arena Hitung</span> <span>➔</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SUB-TAB 5B: BEDAH RUMUS LANGKAH DEMI LANGKAH (GUIDED SOLVER)
+                 ================================================================= -->
+            <div id="a5SubContent_kalkulator" class="hidden space-y-5">
+                <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-7 space-y-5">
+                    <div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-indigo-100 text-indigo-800">Bedah Matematika Terbuka</span>
+                        <h3 class="font-extrabold text-slate-900 text-base sm:text-lg mt-1">🧮 Kalkulator Bimbingan: Paham Alur Hitungan</h3>
+                        <p class="text-xs text-slate-500">Ketik angka suhu apa pun, dan lihat bagaimana rumus perbandingan dipecah langkah demi langkah!</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="text-[11px] font-bold text-slate-500">1. Ketik Nilai Suhu Asal</label>
+                            <input type="number" id="calcValInput" value="40" oninput="solveStepByStep()"
+                                class="w-full mt-1 px-3.5 py-2.5 rounded-2xl border-2 border-slate-300 font-mono font-bold text-base focus:border-blue-600 outline-none">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold text-slate-500">2. Dari Skala Termometer</label>
+                            <select id="calcFromSelect" onchange="solveStepByStep()" class="w-full mt-1 px-3.5 py-2.5 rounded-2xl border-2 border-slate-300 font-bold text-sm bg-white outline-none">
+                                <option value="C">Celcius (°C)</option>
+                                <option value="R">Reamur (°R)</option>
+                                <option value="F">Fahrenheit (°F)</option>
+                                <option value="K">Kelvin (K)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold text-slate-500">3. Ke Skala Tujuan</label>
+                            <select id="calcToSelect" onchange="solveStepByStep()" class="w-full mt-1 px-3.5 py-2.5 rounded-2xl border-2 border-slate-300 font-bold text-sm bg-white outline-none">
+                                <option value="F" selected>Fahrenheit (°F)</option>
+                                <option value="R">Reamur (°R)</option>
+                                <option value="K">Kelvin (K)</option>
+                                <option value="C">Celcius (°C)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Output Langkah Berwarna -->
+                    <div id="calcSolutionBox" class="p-5 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs sm:text-sm space-y-2 leading-relaxed shadow-inner">
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SUB-TAB 5C: ARENA TANTANGAN HITUNG MANDIRI (CORE FOR STUDENTS)
+                 ================================================================= -->
+            <div id="a5SubContent_tantangan" class="hidden space-y-5">
+                <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-7 space-y-5">
+                    <!-- Header Tantangan & Score Stats -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-100 text-rose-800">Tahap M2 & M3: Nirokke & Nambahi</span>
+                                <span class="text-xs font-bold text-slate-400">• Arena Mandiri</span>
+                            </div>
+                            <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-0.5">Tantangan Hitung & Jawab Soal Suhu</h3>
+                            <p class="text-xs text-slate-500">Pilih level, hitung di papan coretan atau kertas, ketik jawabanmu, lalu periksa!</p>
+                        </div>
+
+                        <!-- Gamification Score Board -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="px-3.5 py-2 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center gap-2">
+                                <span class="text-base">🏆</span>
+                                <div class="text-xs font-extrabold text-emerald-900">
+                                    Skor: <span id="gameScoreVal" class="text-sm font-black text-emerald-600">0</span>
+                                </div>
+                            </div>
+                            <div class="px-3.5 py-2 rounded-2xl bg-amber-50 border border-amber-200 flex items-center gap-2">
+                                <span class="text-base">🔥</span>
+                                <div class="text-xs font-extrabold text-amber-900">
+                                    Streak: <span id="gameStreakVal" class="text-sm font-black text-amber-600">0</span>
+                                </div>
+                            </div>
+                            <!-- Level Selector -->
+                            <select id="probLevelSelect" onchange="initNewProblem()" class="px-3 py-2 rounded-2xl border-2 border-slate-300 font-bold text-xs sm:text-sm bg-white outline-none">
+                                <option value="1">Level 1: Pemanasan (C ↔ R & K)</option>
+                                <option value="2">Level 2: Menengah (Melibatkan Fahrenheit)</option>
+                                <option value="3">Level 3: Soal Cerita Sehari-hari (HOTS)</option>
+                            </select>
+                            <button onclick="initNewProblem()" class="px-3.5 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm shadow-sm transition">
+                                🎲 Soal Baru
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Soal & Kolom Jawaban -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                        <!-- Left 8 cols: Soal Box, Input, Hint, Feedback -->
+                        <div class="lg:col-span-8 space-y-4">
+                            <!-- Question Card -->
+                            <div class="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 border-2 border-blue-200 space-y-3 relative overflow-hidden">
+                                <div class="flex items-center justify-between">
+                                    <span id="quizBadgeLevel" class="px-3 py-0.5 rounded-full text-[11px] font-black bg-blue-600 text-white shadow-sm">
+                                        Level 1: Dasar C ↔ R & K
+                                    </span>
+                                    <span class="text-[11px] font-mono text-slate-500 font-bold">Rasio: C:5 | R:4 | F:9 | K:5</span>
+                                </div>
+                                <p id="quizQuestionPrompt" class="text-sm sm:text-base font-bold text-slate-900 leading-relaxed">
+                                    Memuat soal tantangan...
+                                </p>
+                            </div>
+
+                            <!-- Student Input Row -->
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                                <div class="relative flex-1">
+                                    <input type="number" step="any" id="studentAnswerInput" placeholder="Ketik angka hasil hitunganmu..."
+                                        onkeydown="if(event.key==='Enter') evaluateStudentAnswer()"
+                                        class="w-full px-4 py-3 rounded-2xl border-2 border-slate-300 font-mono text-base font-black focus:border-blue-600 outline-none pr-16 shadow-sm">
+                                    <span id="quizUnitSuffix" class="absolute right-4 top-1/2 -translate-y-1/2 font-mono font-black text-slate-400 text-base">
+                                        °R
+                                    </span>
+                                </div>
+                                <button onclick="evaluateStudentAnswer()" class="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 shrink-0">
+                                    <span>✅</span> Periksa Jawaban
+                                </button>
+                                <button onclick="toggleQuizHint()" class="px-4 py-3 rounded-2xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 shrink-0">
+                                    <span>💡</span> Petunjuk
+                                </button>
+                                <button onclick="toggleScratchpadModal()" class="px-4 py-3 rounded-2xl bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 shrink-0" title="Buka papan coretan di layar">
+                                    <span>✏️</span> Coretan
+                                </button>
+                            </div>
+
+                            <!-- Hint Box -->
+                            <div id="quizHintBox" class="hidden p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-xs sm:text-sm text-amber-950 font-medium"></div>
+
+                            <!-- Detailed Feedback & Worked Solution -->
+                            <div id="quizFeedbackBox" class="hidden p-5 rounded-2xl border-2 space-y-2.5 text-xs sm:text-sm transition-all"></div>
+                        </div>
+
+                        <!-- Right 4 cols: Bantuan Cepat Rumus & Tips Menjawab -->
+                        <div class="lg:col-span-4 bg-slate-50 rounded-3xl border border-slate-200 p-4 sm:p-5 space-y-3 flex flex-col justify-between">
+                            <div class="space-y-2.5">
+                                <h4 class="font-extrabold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
+                                    <span>📌</span> Bantuan Kunci Hitung Cepat
+                                </h4>
+                                <div class="p-3 rounded-xl bg-white border border-slate-200 text-xs space-y-2">
+                                    <div class="font-bold text-slate-700">Rumus Universal Perbandingan:</div>
+                                    <div class="font-mono bg-blue-50 text-blue-900 p-2 rounded-lg text-center font-bold text-[11px] leading-relaxed">
+                                        (T_tujuan - Bawah) = <br>
+                                        (Rasio_tujuan / Rasio_asal) × (T_asal - Bawah)
+                                    </div>
+                                    <div class="space-y-1 text-slate-600 text-[11px] leading-tight">
+                                        <div>• <strong>C ➔ R :</strong> 4/5 × C</div>
+                                        <div>• <strong>R ➔ C :</strong> 5/4 × R</div>
+                                        <div>• <strong>C ➔ K :</strong> C + 273</div>
+                                        <div>• <strong>K ➔ C :</strong> K - 273</div>
+                                        <div>• <strong>C ➔ F :</strong> (9/5 × C) + 32</div>
+                                        <div>• <strong>F ➔ C :</strong> 5/9 × (F - 32)</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-950">
+                                <strong>💡 Tips SMP:</strong> Kerjakan yang di dalam kurung terlebih dahulu sebelum mengalikan!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SUB-TAB 5D: TERMOMETER KREASI SISWA (SKALA TERMOMETER X)
+                 ================================================================= -->
+            <div id="a5SubContent_kreasi" class="hidden space-y-5">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                    <!-- Left 7 cols: Buat Termometer Skala Sendiri -->
+                    <div class="lg:col-span-7 bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-6 space-y-4">
+                        <div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-purple-100 text-purple-800">Tahap M3: Memodifikasi (Nambahi)</span>
+                            <h3 class="font-extrabold text-slate-900 text-base sm:text-lg mt-1">🛠️ Simulator Termometer Kreasi Kelompok (Skala X)</h3>
+                            <p class="text-xs text-slate-600">
+                                Di ujian SMP sering muncul soal: <em>"Termometer X memiliki titik beku -10°X dan titik didih 140°X..."</em>. Rancang termometer kelompokmu sendiri di bawah!
+                            </p>
+                        </div>
+
+                        <!-- Setting Termometer X -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-purple-50/50 p-4 rounded-2xl border border-purple-200">
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600">Nama Termometer</label>
+                                <input type="text" id="customNameInput" value="Merdeka" oninput="renderCustomThermo()"
+                                    class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-300 font-bold text-xs sm:text-sm">
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600">Simbol Satuan</label>
+                                <input type="text" id="customSymInput" value="°M" maxlength="4" oninput="renderCustomThermo()"
+                                    class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-300 font-mono font-bold text-xs sm:text-sm">
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-cyan-700">Titik Beku (Es)</label>
+                                <input type="number" id="customFreezeInput" value="-10" oninput="renderCustomThermo()"
+                                    class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-300 font-mono font-bold text-xs sm:text-sm">
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-rose-700">Titik Didih (Air)</label>
+                                <input type="number" id="customBoilInput" value="140" oninput="renderCustomThermo()"
+                                    class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-300 font-mono font-bold text-xs sm:text-sm">
+                            </div>
+                        </div>
+
+                        <!-- Slider Uji Suhu Celcius -->
+                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+                            <div class="flex items-center justify-between text-xs font-bold">
+                                <span>Uji Suhu Celcius: <strong id="customTestCLabel" class="text-blue-600 font-mono text-sm">40 °C</strong></span>
+                                <span id="customScaleRangeInfo" class="text-purple-700 font-mono text-xs">Rentang Skala = 150</span>
+                            </div>
+                            <input type="range" id="customTestSlider" min="0" max="100" value="40" oninput="renderCustomThermo()"
+                                class="w-full bg-gradient-to-r from-cyan-400 to-rose-500 rounded-lg">
+                        </div>
+
+                        <!-- Output Rumus & Hasil Skala X -->
+                        <div id="customMathOutput" class="p-4 rounded-2xl bg-slate-900 text-white font-mono text-xs sm:text-sm space-y-1.5 leading-relaxed shadow-inner">
+                        </div>
+                    </div>
+
+                    <!-- Right 5 cols: Refleksi 3M & Exit Ticket -->
+                    <div class="lg:col-span-5 bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-6 flex flex-col justify-between space-y-4">
+                        <div class="space-y-1">
+                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800">Tahap M3: Merefleksi Pembelajaran</span>
+                            <h3 class="font-extrabold text-slate-900 text-base sm:text-lg">🎯 Rangkuman & Exit Ticket Kelas</h3>
+                            <p class="text-xs text-slate-600">Simpulan 3 pertanyaan emas yang kita pelajari hari ini:</p>
+                        </div>
+
+                        <div class="space-y-2.5 text-xs">
+                            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                                <div class="font-bold text-slate-800">1. Mengapa tangan kita bisa tertipu oleh suhu?</div>
+                                <p class="text-slate-600 mt-0.5">Karena tangan hanya merasakan laju aliran kalor, bukan derajat energi kinetik partikel sebenarnya.</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                                <div class="font-bold text-slate-800">2. Mengapa Kelvin diakui sebagai Satuan Internasional?</div>
+                                <p class="text-slate-600 mt-0.5">Karena bermula dari 0 K (Nol Mutlak) saat partikel berhenti total, sehingga tidak pernah bernilai minus.</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                                <div class="font-bold text-slate-800">3. Kunci rumus konversi suhu tanpa menghafal?</div>
+                                <p class="text-slate-600 mt-0.5">Bandingkan selisih suhu terhadap titik beku dibagi rentang skala (C:5, R:4, F:9, K:5).</p>
+                            </div>
+                        </div>
+
+                        <!-- Studi Kasus Nyata Penutup -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200 space-y-2">
+                            <div class="text-[11px] font-black uppercase text-indigo-700">🌍 Tantangan Nyata Penutup</div>
+                            <p class="text-xs text-slate-800 font-medium">
+                                "Saat liburan ke luar negeri, ramalan cuaca di HP tertulis <strong>68°F</strong>. Apakah kita harus memakai jaket tebal salju atau baju santai?"
+                            </p>
+                            <button onclick="toggleElement('exitTicketAnswer')" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition">
+                                Buka Pembahasan (68°F ke °C)
+                            </button>
+                            <div id="exitTicketAnswer" class="hidden pt-1.5 text-xs text-indigo-950 font-mono">
+                                T_C = 5/9 × (68 - 32) = 5/9 × 36 = <strong>20 °C</strong>.<br>
+                                <span class="font-sans">Suhunya sejuk seperti ruang kelas ber-AC, cukup kenakan kaos santai atau jaket tipis!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BOTTOM PREV/NEXT STEPPER CONTROLLER -->
+        <div class="mt-8 pt-4 border-t border-slate-200 flex items-center justify-between">
+            <button onclick="prevStep()" id="btnPrevStep" class="px-4 sm:px-5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span>←</span> <span>Alur Sebelumnya</span>
+            </button>
+            <div class="text-xs font-black text-slate-400 font-mono" id="bottomStepIndicator">
+                Alur 1 dari 5
+            </div>
+            <button onclick="nextStep()" id="btnNextStep" class="px-4 sm:px-5 py-2.5 rounded-2xl font-black text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-md transition flex items-center gap-2">
+                <span>Lanjut Alur Berikutnya</span> <span>→</span>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- FLOATING / MODAL VIRTUAL SCRATCHPAD FOR STUDENTS TO CALCULATE -->
+    <div id="scratchpadModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-3xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl flex flex-col space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">✏️</span>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-900">Papan Coretan Hitung Siswa</h3>
+                        <p class="text-[11px] text-slate-500">Coret-coret perkalian & pembagianmu langsung di layar!</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="clearScratchpad()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">
+                        🗑️ Bersihkan
+                    </button>
+                    <button onclick="toggleScratchpadModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600">
+                        ✕
+                    </button>
+                </div>
+            </div>
+
+            <!-- Canvas Drawing Area -->
+            <div class="relative bg-amber-50/50 rounded-2xl border-2 border-dashed border-amber-300 h-80 w-full overflow-hidden cursor-crosshair">
+                <canvas id="scratchpadCanvas" class="w-full h-full block touch-none"></canvas>
+            </div>
+
+            <!-- Drawing Tools Palette -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs font-bold text-slate-700">
+                <div class="flex items-center gap-2">
+                    <span>Pilihan Warna:</span>
+                    <button onclick="setScratchpadColor('#1e293b')" class="w-6 h-6 rounded-full bg-slate-800 border-2 border-white shadow"></button>
+                    <button onclick="setScratchpadColor('#2563eb')" class="w-6 h-6 rounded-full bg-blue-600 border-2 border-white shadow"></button>
+                    <button onclick="setScratchpadColor('#dc2626')" class="w-6 h-6 rounded-full bg-rose-600 border-2 border-white shadow"></button>
+                    <button onclick="setScratchpadColor('#059669')" class="w-6 h-6 rounded-full bg-emerald-600 border-2 border-white shadow"></button>
+                </div>
+                <div class="text-[11px] text-slate-500 font-medium">
+                    Mendukung sentuhan layar HP, Tablet, maupun Mouse komputer.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SKENARIO GURU DEEP LEARNING -->
+    <div id="teacherModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-5 sm:p-7 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">👩‍🏫</span>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Modul Ajar Deep Learning Guru (SMP Fase D)</h3>
+                        <p class="text-xs text-slate-500">Panduan Skenario 3M (Mindful, Meaningful, Joyful Learning)</p>
+                    </div>
+                </div>
+                <button onclick="toggleTeacherModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600">✕</button>
+            </div>
+
+            <div class="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                <div class="p-3.5 rounded-2xl bg-blue-50 border border-blue-200">
+                    <strong class="text-blue-900">1. Alur 1: Mindful Pemantik (10 Menit)</strong>
+                    <p class="mt-0.5">Jangan langsung mendiktekan rumus. Biarkan siswa memegang kaki meja besi dan permukaan kayu di kelas, lalu buka simulasi untuk membuktikan bahwa keduanya bersuhu 25°C. Timbulkan rasa penasaran kognitif!</p>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200">
+                    <strong class="text-indigo-900">2. Alur 2: Meaningful Mikroskopis (10 Menit)</strong>
+                    <p class="mt-0.5">Jelaskan bahwa panas bukanlah zat cair yang mengalir, melainkan gerak getaran partikel materi. Gunakan slider ruang partikel agar siswa melihat visual getaran partikel.</p>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200">
+                    <strong class="text-emerald-900">3. Alur 3: Satuan Internasional Kelvin (10 Menit)</strong>
+                    <p class="mt-0.5">Tunjukkan polling kelas, lalu geser ke -273°C (0 K) untuk membuktikan konsep Nol Mutlak ketika partikel berhenti total. Tekankan bahwa penulisan Kelvin tidak memakai simbol derajat (°).</p>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-cyan-50 border border-cyan-200">
+                    <strong class="text-cyan-900">4. Alur 4: Observasi Termometer (10 Menit)</strong>
+                    <p class="mt-0.5">Bahas keamanan di lab: mengapa termometer badan tidak boleh dimasukkan ke air mendidih (risiko pipa kapiler pecah).</p>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-rose-50 border border-rose-200">
+                    <strong class="text-rose-900">5. Alur 5: Konversi & Arena Hitung Mandiri (40 Menit)</strong>
+                    <p class="mt-0.5">Siswa diajak menemukan rasio 5:4:9:5 dari selisih titik didih dan titik beku. Lalu berikan waktu siswa mengerjakan soal Level 1 hingga Level 3 di tab Arena Hitung Mandiri menggunakan papan coretan!</p>
+                </div>
+            </div>
+
+            <div class="pt-2 text-right">
+                <button onclick="toggleTeacherModal()" class="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm transition">
+                    Tutup Panduan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APPLICATION CORE -->
+    <script>
+        // =========================================================================
+        // 1. SOUND SYNTHESIS ENGINE (WEB AUDIO API - ZERO DEPENDENCIES)
+        // =========================================================================
+        let audioEnabled = true;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.06);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.06);
+                    osc.start(now);
+                    osc.stop(now + 0.07);
+                } else if (type === 'correct') {
+                    // Joyful chord chime (C5 -> E5 -> G5)
+                    [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'triangle';
+                        o.frequency.setValueAtTime(freq, now + idx * 0.08);
+                        g.gain.setValueAtTime(0.12, now + idx * 0.08);
+                        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.35);
+                        o.start(now + idx * 0.08);
+                        o.stop(now + idx * 0.08 + 0.36);
+                    });
+                } else if (type === 'wrong') {
+                    // Encouraging retry tone
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(260, now);
+                    osc.frequency.linearRampToValueAtTime(180, now + 0.18);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.18);
+                    osc.start(now);
+                    osc.stop(now + 0.19);
+                }
+            } catch (e) {
+                console.warn("Audio not supported or blocked", e);
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audioIcon').textContent = audioEnabled ? '🔊' : '🔇';
+            document.getElementById('audioLabel').textContent = audioEnabled ? 'Suara: ON' : 'Suara: OFF';
+            if (audioEnabled) playSound('click');
+        }
+
+        // =========================================================================
+        // 2. CONFETTI CELEBRATION ENGINE
+        // =========================================================================
+        const confettiCanvas = document.getElementById('confettiCanvas');
+        const cCtx = confettiCanvas.getContext('2d');
+        let confettiPieces = [];
+        let confettiAnimId = null;
+
+        function triggerConfetti() {
+            confettiPieces = [];
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+            const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+            for (let i = 0; i < 90; i++) {
+                confettiPieces.push({
+                    x: window.innerWidth * 0.5 + (Math.random() - 0.5) * 200,
+                    y: window.innerHeight * 0.3 + (Math.random() - 0.5) * 100,
+                    vx: (Math.random() - 0.5) * 14,
+                    vy: -Math.random() * 12 - 4,
+                    size: Math.random() * 8 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * 360,
+                    vrot: (Math.random() - 0.5) * 10,
+                    life: 1
+                });
+            }
+            if (!confettiAnimId) animateConfetti();
+        }
+
+        function animateConfetti() {
+            cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            let alive = false;
+            for (let p of confettiPieces) {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.35; // gravity
+                p.rot += p.vrot;
+                p.life -= 0.012;
+                if (p.life > 0) {
+                    alive = true;
+                    cCtx.save();
+                    cCtx.translate(p.x, p.y);
+                    cCtx.rotate((p.rot * Math.PI) / 180);
+                    cCtx.fillStyle = p.color;
+                    cCtx.globalAlpha = Math.max(0, p.life);
+                    cCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.4);
+                    cCtx.restore();
+                }
+            }
+            if (alive) {
+                confettiAnimId = requestAnimationFrame(animateConfetti);
+            } else {
+                confettiAnimId = null;
+                cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            }
+        }
+
+        // =========================================================================
+        // 3. STEPPER CONTROLLER (ALUR 1 S.D. 5)
+        // =========================================================================
+        let currentStep = 1;
+
+        function goToStep(step) {
+            currentStep = step;
+            playSound('click');
+            for (let i = 1; i <= 5; i++) {
+                const sec = document.getElementById('stepSection' + i);
+                const btn = document.getElementById('stepNav' + i);
+                const idxSpan = btn.querySelector('.step-idx');
+                if (i === step) {
+                    sec.classList.remove('hidden');
+                    btn.className = "step-nav-btn flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-blue-600 text-white shadow-sm";
+                    idxSpan.className = "w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black bg-white text-blue-600 step-idx";
+                } else {
+                    sec.classList.add('hidden');
+                    btn.className = "step-nav-btn flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-600";
+                    idxSpan.className = "w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black bg-slate-200 text-slate-700 step-idx";
+                }
+            }
+
+            document.getElementById('btnPrevStep').disabled = (step === 1);
+            document.getElementById('btnNextStep').disabled = (step === 5);
+            document.getElementById('bottomStepIndicator').textContent = `Alur ${step} dari 5`;
+
+            if (step === 2) {
+                setTimeout(resizeCanvas, 60);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function nextStep() {
+            if (currentStep < 5) goToStep(currentStep + 1);
+        }
+        function prevStep() {
+            if (currentStep > 1) goToStep(currentStep - 1);
+        }
+
+        function toggleElement(id) {
+            playSound('click');
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+        }
+
+        function toggleTeacherModal() {
+            playSound('click');
+            document.getElementById('teacherModal').classList.toggle('hidden');
+        }
+
+        function toggleFullscreen() {
+            playSound('click');
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+                document.getElementById('fullscreenText').textContent = "Keluar Penuh";
+            } else {
+                document.exitFullscreen().catch(() => {});
+                document.getElementById('fullscreenText').textContent = "Layar Penuh";
+            }
+        }
+
+        // =========================================================================
+        // 4. ALUR 1: LOGIKA INDRA PERABA VS FAKTA SAINS
+        // =========================================================================
+        function switchAlur1Tab(tab) {
+            playSound('click');
+            const k = document.getElementById('alur1ContentKelas');
+            const b = document.getElementById('alur1ContentBaskom');
+            const btnK = document.getElementById('btnA1Kelas');
+            const btnB = document.getElementById('btnA1Baskom');
+            if (tab === 'kelas') {
+                k.classList.remove('hidden');
+                b.classList.add('hidden');
+                btnK.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-blue-700 shadow transition flex items-center gap-2";
+                btnB.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white hover:bg-white/10 transition flex items-center gap-2";
+            } else {
+                k.classList.add('hidden');
+                b.classList.remove('hidden');
+                btnB.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-blue-700 shadow transition flex items-center gap-2";
+                btnK.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white hover:bg-white/10 transition flex items-center gap-2";
+            }
+        }
+
+        function touchObject(item) {
+            playSound('click');
+            document.getElementById('touchFeedback_' + item).classList.remove('hidden');
+        }
+
+        function measureObject(item) {
+            playSound('click');
+            document.getElementById('measureFeedback_' + item).classList.remove('hidden');
+        }
+
+        function resetTouchExp() {
+            playSound('click');
+            ['pipi', 'kayu', 'besi'].forEach(i => {
+                document.getElementById('touchFeedback_' + i).classList.add('hidden');
+                document.getElementById('measureFeedback_' + i).classList.add('hidden');
+            });
+        }
+
+        function stepBasin(s) {
+            playSound('click');
+            const lHand = document.getElementById('basinHandLeft');
+            const rHand = document.getElementById('basinHandRight');
+            const cHand = document.getElementById('basinHandCenter');
+            const lLbl = document.getElementById('labelHandLeftCenter');
+            const rLbl = document.getElementById('labelHandRightCenter');
+            const msg = document.getElementById('basinStatusMsg');
+
+            if (s === 0) {
+                lHand.style.transform = 'translateY(0)';
+                rHand.style.transform = 'translateY(0)';
+                lHand.style.opacity = '1';
+                rHand.style.opacity = '1';
+                cHand.style.opacity = '0.2';
+                lLbl.textContent = 'Kiri: ?';
+                rLbl.textContent = 'Kanan: ?';
+                lLbl.className = "text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 mt-0.5";
+                rLbl.className = "text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 mt-0.5";
+                msg.className = "p-3.5 rounded-2xl bg-slate-100 border border-slate-200 text-xs sm:text-sm text-slate-700 text-center font-medium";
+                msg.innerHTML = 'Klik <strong>"1️⃣ Celupkan Kiri & Kanan"</strong> lalu <strong>"2️⃣ Pindahkan Bersama ke Tengah!"</strong>';
+            } else if (s === 1) {
+                lHand.style.transform = 'translateY(16px)';
+                rHand.style.transform = 'translateY(16px)';
+                cHand.style.opacity = '0.2';
+                msg.className = "p-3.5 rounded-2xl bg-blue-50 border border-blue-200 text-xs sm:text-sm text-blue-900 text-center font-medium";
+                msg.innerHTML = '<strong>Tahap 1:</strong> Tangan Kiri di air es (10°C) terasa dingin, Tangan Kanan di air hangat (45°C) terasa panas. Sekarang klik tombol <strong>"2️⃣ Pindahkan Bersama ke Tengah!"</strong>';
+            } else if (s === 2) {
+                lHand.style.opacity = '0.2';
+                rHand.style.opacity = '0.2';
+                cHand.style.opacity = '1';
+                lLbl.textContent = 'Kiri: TERASA PANAS! 🔥';
+                lLbl.className = "text-[10px] font-black px-1.5 py-0.5 rounded bg-rose-600 text-white mt-0.5 shadow";
+                rLbl.textContent = 'Kanan: TERASA DINGIN! ❄️';
+                rLbl.className = "text-[10px] font-black px-1.5 py-0.5 rounded bg-cyan-600 text-white mt-0.5 shadow";
+                msg.className = "p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-400 text-xs sm:text-sm text-emerald-950 text-center font-medium";
+                msg.innerHTML = '<strong>Paradoks Sains Terbukti!</strong> Air di baskom tengah sama-sama <strong>28°C</strong>, tetapi tangan kiri melaporkan PANAS (menerima kalor) dan tangan kanan melaporkan DINGIN (melepas kalor)!';
+            }
+        }
+
+        // =========================================================================
+        // 5. ALUR 2: SIMULASI PARTIKEL MIKROSKOPIS (HTML5 CANVAS)
+        // =========================================================================
+        const pCanvas = document.getElementById('particleCanvas');
+        const pCtx = pCanvas.getContext('2d');
+        let atoms = [];
+        let particleTemp = 25;
+
+        function initAtoms() {
+            atoms = [];
+            const count = 48;
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                atoms.push({
+                    x: Math.random() * 400 + 20,
+                    y: Math.random() * 200 + 20,
+                    vx: Math.cos(angle),
+                    vy: Math.sin(angle),
+                    r: 7
+                });
+            }
+        }
+
+        function resizeCanvas() {
+            const rect = pCanvas.parentElement.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+                pCanvas.width = rect.width;
+                pCanvas.height = rect.height;
+            }
+        }
+
+        function changeParticleTemp(val) {
+            particleTemp = parseFloat(val);
+            document.getElementById('particleTempSlider').value = particleTemp;
+            document.getElementById('hudParticleTemp').textContent = particleTemp + " °C";
+
+            const badge = document.getElementById('particleStateBadge');
+            const kLbl = document.getElementById('hudKineticLabel');
+
+            if (particleTemp <= 0) {
+                badge.textContent = `❄️ Beku (${particleTemp}°C)`;
+                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-cyan-100 text-cyan-800";
+                kLbl.textContent = "Sangat Lambat (Kisi Es)";
+                kLbl.className = "font-bold text-cyan-400";
+            } else if (particleTemp <= 50) {
+                badge.textContent = `💧 Suhu Normal (${particleTemp}°C)`;
+                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800";
+                kLbl.textContent = "Sedang / Stabil";
+                kLbl.className = "font-bold text-emerald-400";
+            } else if (particleTemp <= 95) {
+                badge.textContent = `♨️ Panas (${particleTemp}°C)`;
+                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800";
+                kLbl.textContent = "Cepat (Tinggi)";
+                kLbl.className = "font-bold text-amber-400";
+            } else {
+                badge.textContent = `🔥 Mendidih / Uap (${particleTemp}°C)`;
+                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800";
+                kLbl.textContent = "Sangat Cepat (Liar)";
+                kLbl.className = "font-bold text-rose-400";
+            }
+        }
+
+        function setParticlePreset(val) {
+            playSound('click');
+            changeParticleTemp(val);
+        }
+
+        function animateAtoms() {
+            if (currentStep === 2 && pCanvas.width > 0) {
+                pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+
+                // Speed factor
+                const norm = (particleTemp + 30) / 170; // 0 to 1
+                const speedMult = 0.35 + Math.pow(Math.max(0.04, norm), 1.35) * 5.8;
+
+                // Color based on temperature
+                let fill = "#38bdf8"; // icy cyan
+                if (particleTemp > 0 && particleTemp <= 45) fill = "#34d399"; // emerald
+                else if (particleTemp > 45 && particleTemp <= 90) fill = "#fbbf24"; // amber
+                else if (particleTemp > 90) fill = "#f43f5e"; // rose flame
+
+                for (let a of atoms) {
+                    a.x += a.vx * speedMult;
+                    a.y += a.vy * speedMult;
+
+                    // Bounce
+                    if (a.x < a.r) { a.x = a.r; a.vx *= -1; }
+                    if (a.x > pCanvas.width - a.r) { a.x = pCanvas.width - a.r; a.vx *= -1; }
+                    if (a.y < a.r) { a.y = a.r; a.vy *= -1; }
+                    if (a.y > pCanvas.height - a.r) { a.y = pCanvas.height - a.r; a.vy *= -1; }
+
+                    pCtx.beginPath();
+                    pCtx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
+                    pCtx.fillStyle = fill;
+                    pCtx.fill();
+                    pCtx.lineWidth = 2;
+                    pCtx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+                    pCtx.stroke();
+                }
+            }
+            requestAnimationFrame(animateAtoms);
+        }
+
+        function checkA2Quiz(choice) {
+            const fb = document.getElementById('quizA2Feedback');
+            fb.classList.remove('hidden');
+            if (choice === 'B') {
+                playSound('correct');
+                triggerConfetti();
+                fb.className = "p-3 rounded-xl text-xs font-medium bg-emerald-50 border border-emerald-300 text-emerald-950";
+                fb.innerHTML = "🎉 <strong>Tepat Sekali!</strong> Saat suhu sup turun, energi kinetik rata-rata partikelnya berkurang sehingga gerak getaran partikel melambat.";
+            } else {
+                playSound('wrong');
+                fb.className = "p-3 rounded-xl text-xs font-medium bg-rose-50 border border-rose-300 text-rose-950";
+                fb.innerHTML = "❌ <strong>Kurang Tepat.</strong> Partikel tidak bertambah kecil atau berkurang jumlahnya, melainkan kecepatannya yang melambat!";
+            }
+        }
+
+        // =========================================================================
+        // 6. ALUR 3: POLLING SI & SIMULASI NOL MUTLAK
+        // =========================================================================
+        let siVotes = { C: 0, F: 0, R: 0, K: 0 };
+
+        function voteSIScale(scale) {
+            playSound('click');
+            siVotes[scale]++;
+            ['C', 'F', 'R', 'K'].forEach(s => {
+                document.getElementById('voteCount' + s).textContent = `${siVotes[s]} suara`;
+            });
+            document.getElementById('revealSIExplanation').classList.remove('hidden');
+            document.getElementById('btnVoteK').className = "p-3.5 rounded-2xl border-2 border-emerald-500 bg-emerald-50 text-left transition flex flex-col justify-between";
+            if (scale === 'K') {
+                playSound('correct');
+                triggerConfetti();
+            }
+        }
+
+        function changeZeroSim(cVal) {
+            const c = parseInt(cVal, 10);
+            const k = c + 273;
+            document.getElementById('zeroSlider').value = c;
+            document.getElementById('displayZeroC').textContent = `${c} °C`;
+            document.getElementById('displayZeroK').textContent = `${k} K`;
+
+            const noteC = document.getElementById('displayZeroCNote');
+            const partLbl = document.getElementById('displayZeroParticle');
+            const phenom = document.getElementById('displayZeroPhenom');
+
+            if (c < 0) {
+                noteC.textContent = "Bernilai NEGATIF (-)";
+                noteC.className = "text-[10px] text-rose-600 font-bold";
+            } else {
+                noteC.textContent = "Bernilai Positif / Nol";
+                noteC.className = "text-[10px] text-slate-500 font-medium";
+            }
+
+            if (k === 0) {
+                partLbl.textContent = "🛑 BERHENTI TOTAL (0 m/s)";
+                partLbl.className = "text-xs font-black text-cyan-300 mt-0.5";
+                phenom.textContent = "Nol Mutlak (Absolute Zero)!";
+            } else if (c <= -150) {
+                partLbl.textContent = "Bergetar Sangat Lemah";
+                partLbl.className = "text-xs font-black text-indigo-300 mt-0.5";
+                phenom.textContent = "Suhu kriogenik gas cair";
+            } else if (c <= 0) {
+                partLbl.textContent = "Bergetar Lambat";
+                partLbl.className = "text-xs font-black text-cyan-400 mt-0.5";
+                phenom.textContent = "Fase es beku";
+            } else if (c < 100) {
+                partLbl.textContent = "Bergerak Aktif";
+                partLbl.className = "text-xs font-black text-emerald-400 mt-0.5";
+                phenom.textContent = "Fase air cair";
+            } else {
+                partLbl.textContent = "Bergerak Sangat Liar!";
+                partLbl.className = "text-xs font-black text-rose-400 mt-0.5";
+                phenom.textContent = "Air mendidih jadi uap";
+            }
+        }
+
+        function setZeroPreset(val) {
+            playSound('click');
+            changeZeroSim(val);
+        }
+
+        // =========================================================================
+        // 7. ALUR 4: LABORATORIUM TERMOMETER
+        // =========================================================================
+        let currentTool = 'klinis';
+        let currentTarget = 'demam';
+
+        const toolsMeta = {
+            klinis: { name: "Termometer Klinis (Badan)", min: 35, max: 42 },
+            ruangan: { name: "Termometer Ruangan / Dinding", min: -30, max: 50 },
+            lab: { name: "Termometer Laboratorium", min: -10, max: 110 },
+            pirometer: { name: "Termometer Inframerah / Pirometer", min: -50, max: 600 }
+        };
+
+        const targetMeta = {
+            es: { name: "Es Mencair", temp: 0 },
+            demam: { name: "Adik Demam", temp: 38.5 },
+            mendidih: { name: "Air Mendidih", temp: 100 },
+            besi: { name: "Besi Menempa", temp: 450 }
+        };
+
+        function pickToolThermo(k) {
+            playSound('click');
+            currentTool = k;
+            ['klinis', 'ruangan', 'lab', 'pirometer'].forEach(item => {
+                const btn = document.getElementById('btnTool' + item.charAt(0).toUpperCase() + item.slice(1));
+                if (item === k) {
+                    btn.className = "w-full p-3 rounded-2xl border-2 border-blue-600 bg-blue-50/70 text-left transition flex items-center justify-between";
+                } else {
+                    btn.className = "w-full p-3 rounded-2xl border-2 border-slate-200 hover:border-blue-300 text-left transition flex items-center justify-between";
+                }
+            });
+            evaluateThermoMatch();
+        }
+
+        function pickTargetObject(k) {
+            playSound('click');
+            currentTarget = k;
+            ['es', 'demam', 'mendidih', 'besi'].forEach(item => {
+                const btn = document.getElementById('btnTarget' + item.charAt(0).toUpperCase() + item.slice(1));
+                if (item === k) {
+                    btn.className = "p-3 rounded-2xl border-2 border-blue-600 bg-blue-50 text-center transition shadow-sm";
+                } else {
+                    btn.className = "p-3 rounded-2xl border-2 border-slate-200 hover:border-blue-300 bg-slate-50 text-center transition";
+                }
+            });
+            evaluateThermoMatch();
+        }
+
+        function evaluateThermoMatch() {
+            const tool = toolsMeta[currentTool];
+            const obj = targetMeta[currentTarget];
+            const card = document.getElementById('thermoTestCard');
+            const badge = document.getElementById('thermoResultBadge');
+            const rangeLbl = document.getElementById('thermoRangeLabel');
+            const title = document.getElementById('thermoResultTitle');
+            const desc = document.getElementById('thermoResultDesc');
+
+            rangeLbl.textContent = `Rentang: ${tool.min}°C s.d. ${tool.max}°C`;
+
+            if (obj.temp > tool.max) {
+                playSound('wrong');
+                card.className = "p-4 sm:p-5 rounded-2xl border-2 border-rose-400 bg-rose-50 space-y-2 transition-all";
+                badge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white";
+                badge.textContent = "⚠️ BAHAYA! MELEBIHI BATAS UKUR MAKSIMUM";
+                title.textContent = `Gagal: ${obj.name} (${obj.temp}°C) terlalu panas untuk ${tool.name}`;
+                desc.innerHTML = `Suhu <strong>${obj.temp}°C</strong> melebihi batas maksimum <strong>${tool.name} (${tool.max}°C)</strong>! Jika dipaksakan, cairan pemuai bisa mendesak pipa kapiler kaca hingga <strong>retak atau pecah</strong>!`;
+            } else if (obj.temp < tool.min) {
+                playSound('wrong');
+                card.className = "p-4 sm:p-5 rounded-2xl border-2 border-amber-400 bg-amber-50 space-y-2 transition-all";
+                badge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-600 text-white";
+                badge.textContent = "❄️ DI BAWAH BATAS UKUR MINIMUM";
+                title.textContent = `Tidak Terbaca: ${obj.name} (${obj.temp}°C) terlalu dingin`;
+                desc.innerHTML = `Suhu <strong>${obj.temp}°C</strong> berada di bawah titik terendah <strong>${tool.name} (${tool.min}°C)</strong>. Cairan termometer akan turun ke tandon bawah dan tidak terbaca.`;
+            } else {
+                playSound('correct');
+                card.className = "p-4 sm:p-5 rounded-2xl border-2 border-emerald-400 bg-emerald-50 space-y-2 transition-all";
+                badge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-600 text-white";
+                badge.textContent = "✅ PENGUKURAN AMAN & SESUAI";
+                title.textContent = `Terukur: ${obj.temp} °C pada ${obj.name}`;
+                desc.innerHTML = `<strong>${tool.name}</strong> bekerja sempurna karena suhu <strong>${obj.temp}°C</strong> berada dalam jangkauan aman (${tool.min}°C – ${tool.max}°C).`;
+            }
+        }
+
+        // =========================================================================
+        // 8. ALUR 5: SUB-TABS & PARALLEL THERMOMETERS
+        // =========================================================================
+        function switchA5Tab(tName) {
+            playSound('click');
+            ['lab', 'kalkulator', 'tantangan', 'kreasi'].forEach(item => {
+                const sub = document.getElementById('a5SubContent_' + item);
+                const btn = document.getElementById('tabA5Btn_' + item);
+                const badge = btn.querySelector('span:first-child');
+                if (item === tName) {
+                    sub.classList.remove('hidden');
+                    btn.className = "py-2.5 px-3 rounded-xl text-xs font-extrabold bg-white text-blue-800 shadow transition flex items-center gap-2";
+                    badge.className = "w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xs shrink-0";
+                } else {
+                    sub.classList.add('hidden');
+                    btn.className = "py-2.5 px-3 rounded-xl text-xs font-extrabold text-white hover:bg-white/10 transition flex items-center gap-2";
+                    badge.className = "w-6 h-6 rounded-lg bg-white/20 text-white flex items-center justify-center font-black text-xs shrink-0";
+                }
+            });
+        }
+
+        function formatVal(n) {
+            return Number.isInteger(n) ? n.toString() : n.toFixed(1).replace('.', ',');
+        }
+
+        function changeLabThermos(cVal) {
+            const c = parseFloat(cVal);
+            document.getElementById('sliderLabThermos').value = c;
+
+            const r = (4 / 5) * c;
+            const f = (9 / 5) * c + 32;
+            const k = c + 273;
+
+            document.getElementById('valColC').textContent = `${formatVal(c)} °C`;
+            document.getElementById('valColR').textContent = `${formatVal(r)} °R`;
+            document.getElementById('valColF').textContent = `${formatVal(f)} °F`;
+            document.getElementById('valColK').textContent = `${formatVal(k)} K`;
+
+            // Percentage height: -40°C -> 6%, 0°C -> 24%, 100°C -> 81%, 110°C -> 87%
+            const pct = Math.max(6, Math.min(94, ((c + 40) / 160) * 85 + 6));
+            ['C', 'R', 'F', 'K'].forEach(s => {
+                document.getElementById('liquidCol' + s).style.height = pct + '%';
+            });
+
+            const pBadge = document.getElementById('labPhaseBadge');
+            if (c <= 0) {
+                pBadge.textContent = `🧊 Es Beku (${formatVal(c)}°C)`;
+                pBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-100 text-cyan-800";
+            } else if (c >= 100) {
+                pBadge.textContent = `♨️ Mendidih / Uap (${formatVal(c)}°C)`;
+                pBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800";
+            } else {
+                pBadge.textContent = `💧 Air Cair (${formatVal(c)}°C)`;
+                pBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800";
+            }
+        }
+
+        let ratioRevealed = false;
+        function toggleA5RatioRow() {
+            playSound('click');
+            ratioRevealed = !ratioRevealed;
+            const btn = document.getElementById('btnA5Simplify');
+            if (ratioRevealed) {
+                document.getElementById('cellRatioC').textContent = '5';
+                document.getElementById('cellRatioR').textContent = '4';
+                document.getElementById('cellRatioF').textContent = '9';
+                document.getElementById('cellRatioK').textContent = '5';
+                btn.textContent = "🔄 Sembunyikan";
+            } else {
+                document.getElementById('cellRatioC').textContent = '?';
+                document.getElementById('cellRatioR').textContent = '?';
+                document.getElementById('cellRatioF').textContent = '?';
+                document.getElementById('cellRatioK').textContent = '?';
+                btn.textContent = "✨ Bagi 20";
+            }
+        }
+
+        // =========================================================================
+        // 9. ALUR 5 SUB-TAB B: KALKULATOR BIMBINGAN LANGKAH (SOLVER)
+        // =========================================================================
+        const scaleData = {
+            C: { name: 'Celcius', sym: '°C', freeze: 0, ratio: 5 },
+            R: { name: 'Reamur', sym: '°R', freeze: 0, ratio: 4 },
+            F: { name: 'Fahrenheit', sym: '°F', freeze: 32, ratio: 9 },
+            K: { name: 'Kelvin', sym: 'K', freeze: 273, ratio: 5 }
+        };
+
+        function solveStepByStep() {
+            const v = parseFloat(document.getElementById('calcValInput').value) || 0;
+            const fKey = document.getElementById('calcFromSelect').value;
+            const tKey = document.getElementById('calcToSelect').value;
+            const from = scaleData[fKey];
+            const to = scaleData[tKey];
+
+            const diff = v - from.freeze;
+            const scaled = (to.ratio / from.ratio) * diff;
+            const ans = scaled + to.freeze;
+
+            const box = document.getElementById('calcSolutionBox');
+            box.innerHTML = `
+                <div class="text-slate-400 font-bold">// Alur Perbandingan: Rasio ${tKey} (${to.ratio}) terhadap ${fKey} (${from.ratio})</div>
+                <div>1. Kurangi suhu asal dengan Titik Tetap Bawah ${from.name} (${from.freeze}):</div>
+                <div class="pl-3 text-cyan-300">Selisih = ${formatVal(v)} - ${from.freeze} = <strong>${formatVal(diff)}</strong></div>
+                <div>2. Kalikan dengan perbandingan rasio (${to.ratio}/${from.ratio}):</div>
+                <div class="pl-3 text-amber-300">Nilai Skala Baru = (${to.ratio}/${from.ratio}) × ${formatVal(diff)} = <strong>${formatVal(scaled)}</strong></div>
+                <div>3. Tambahkan Titik Tetap Bawah ${to.name} (${to.freeze}):</div>
+                <div class="pl-3 text-emerald-400 font-black text-base pt-1">🎯 Hasil Akhir = ${formatVal(scaled)} + ${to.freeze} = <strong>${formatVal(ans)} ${to.sym}</strong></div>
+            `;
+        }
+
+        // =========================================================================
+        // 10. ALUR 5 SUB-TAB C: ARENA HITUNG MANDIRI SISWA (QUIZ ENGINE)
+        // =========================================================================
+        let currentProb = null;
+        let gameScore = 0;
+        let gameStreak = 0;
+
+        const hotsQuestions = [
+            {
+                q: "Sebuah resep brownies cokelat dari Amerika meminta oven dipanaskan pada suhu 350 °F. Berapa derajat Celcius (°C) jika oven di rumahmu menggunakan skala Celcius? (Boleh bulatkan 1 angka desimal)",
+                from: 'F', to: 'C', val: 350, ans: 176.7,
+                hint: "Kurangi dulu 350 dengan 32, lalu hasilnya dikalikan perbandingan rasio 5/9."
+            },
+            {
+                q: "Saat liburan musim gugur di Jepang, termometer digital di jalan menunjukkan suhu udara luar 59 °F. Berapakah suhu udara tersebut jika dinyatakan dalam skala Celcius (°C)?",
+                from: 'F', to: 'C', val: 59, ans: 15,
+                hint: "Hitung (59 - 32) terlebih dahulu, baru kalikan dengan 5/9."
+            },
+            {
+                q: "Di laboratorium IPA SMP, seorang siswa memanaskan air sampai termometer Reamur menunjuk angka 60 °R. Berapakah suhu air tersebut jika diukur dalam Satuan Internasional Kelvin (K)?",
+                from: 'R', to: 'K', val: 60, ans: 348,
+                hint: "Ubah dulu dari Reamur ke Celcius: (5/4 × 60) = 75°C. Lalu tambahkan 273 untuk menjadi Kelvin!"
+            },
+            {
+                q: "Suhu tubuh anak yang sehat adalah sekitar 37 °C. Jika seorang turis dari Inggris mengukurnya dengan termometer Fahrenheit (°F), berapakah angka yang akan terbaca?",
+                from: 'C', to: 'F', val: 37, ans: 98.6,
+                hint: "Kalikan 37 dengan rasio 9/5 terlebih dahulu, lalu jangan lupa ditambah titik beku Fahrenheit (32)."
+            },
+            {
+                q: "Sebuah lemari pendingin (freezer) es krim diatur pada suhu -15 °C. Berapakah suhu freezer tersebut jika dinyatakan dalam skala Kelvin (K)?",
+                from: 'C', to: 'K', val: -15, ans: 258,
+                hint: "Ingat rumus Kelvin: K = C + 273. Maka hitung: -15 + 273."
+            }
+        ];
+
+        function initNewProblem() {
+            playSound('click');
+            const lvl = document.getElementById('probLevelSelect').value;
+            const badge = document.getElementById('quizBadgeLevel');
+            const qPrompt = document.getElementById('quizQuestionPrompt');
+            const unitSuffix = document.getElementById('quizUnitSuffix');
+
+            document.getElementById('studentAnswerInput').value = '';
+            document.getElementById('quizHintBox').classList.add('hidden');
+            document.getElementById('quizFeedbackBox').classList.add('hidden');
+
+            if (lvl === '1') {
+                badge.textContent = "Level 1: Pemanasan Dasar (C ↔ R & K)";
+                badge.className = "px-3 py-0.5 rounded-full text-[11px] font-black bg-blue-600 text-white shadow-sm";
+                const cVal = (Math.floor(Math.random() * 15) + 2) * 5; // multiple of 5: 10, 15, ..., 80
+                const target = Math.random() > 0.5 ? 'R' : 'K';
+                const ans = target === 'R' ? (4 / 5) * cVal : cVal + 273;
+                currentProb = {
+                    from: 'C', to: target, val: cVal, ans: ans,
+                    q: `Sebuah zat cair diukur suhunya menunjukkan angka <strong>${cVal} °C</strong>. Berapakah suhunya jika diukur menggunakan termometer <strong>${scaleData[target].name} (${scaleData[target].sym})</strong>?`,
+                    hint: target === 'R'
+                        ? `Gunakan rasio R : C = 4 : 5. Maka hitung: (4/5) × ${cVal}.`
+                        : `Titik beku Kelvin adalah 273. Maka tinggal hitung: ${cVal} + 273.`
+                };
+            } else if (lvl === '2') {
+                badge.textContent = "Level 2: Menengah (Melibatkan Fahrenheit)";
+                badge.className = "px-3 py-0.5 rounded-full text-[11px] font-black bg-indigo-600 text-white shadow-sm";
+                const cVal = (Math.floor(Math.random() * 14) + 1) * 5;
+                const isCtoF = Math.random() > 0.5;
+                if (isCtoF) {
+                    const fAns = (9 / 5) * cVal + 32;
+                    currentProb = {
+                        from: 'C', to: 'F', val: cVal, ans: fAns,
+                        q: `Air teh di dalam cangkir memiliki suhu <strong>${cVal} °C</strong>. Berapakah nilainya jika dinyatakan dalam satuan <strong>Fahrenheit (°F)</strong>?`,
+                        hint: `Gunakan rasio 9/5 dikali ${cVal}, lalu hasilnya ditambah 32. Rumus: (9/5 × ${cVal}) + 32.`
+                    };
+                } else {
+                    const fVal = (9 / 5) * cVal + 32;
+                    currentProb = {
+                        from: 'F', to: 'C', val: fVal, ans: cVal,
+                        q: `Termometer Fahrenheit pada dinding menunjukkan angka <strong>${fVal} °F</strong>. Berapakah suhu ruangan tersebut dalam skala <strong>Celcius (°C)</strong>?`,
+                        hint: `Ingat! Kurangi dulu dengan 32: (${fVal} - 32), kemudian baru dikalikan rasio 5/9.`
+                    };
+                }
+            } else {
+                badge.textContent = "Level 3: Soal Cerita Sehari-hari (HOTS)";
+                badge.className = "px-3 py-0.5 rounded-full text-[11px] font-black bg-rose-600 text-white shadow-sm";
+                currentProb = hotsQuestions[Math.floor(Math.random() * hotsQuestions.length)];
+            }
+
+            qPrompt.innerHTML = currentProb.q;
+            unitSuffix.textContent = scaleData[currentProb.to].sym;
+        }
+
+        function toggleQuizHint() {
+            playSound('click');
+            const h = document.getElementById('quizHintBox');
+            h.innerHTML = `💡 <strong>Petunjuk Langkah:</strong> ${currentProb.hint}`;
+            h.classList.toggle('hidden');
+        }
+
+        function evaluateStudentAnswer() {
+            const raw = document.getElementById('studentAnswerInput').value.replace(',', '.');
+            const uVal = parseFloat(raw);
+            const fb = document.getElementById('quizFeedbackBox');
+            fb.classList.remove('hidden');
+
+            if (isNaN(uVal)) {
+                playSound('wrong');
+                fb.className = "p-4 rounded-2xl border-2 border-amber-300 bg-amber-50 text-amber-950 text-xs sm:text-sm font-semibold";
+                fb.innerHTML = "⚠️ Silakan ketik angka hasil hitunganmu terlebih dahulu di kotak jawaban!";
+                return;
+            }
+
+            const isCorrect = Math.abs(uVal - currentProb.ans) <= 0.2;
+            const fromMeta = scaleData[currentProb.from];
+            const toMeta = scaleData[currentProb.to];
+            const diff = currentProb.val - fromMeta.freeze;
+
+            if (isCorrect) {
+                playSound('correct');
+                triggerConfetti();
+                gameScore += 10;
+                gameStreak += 1;
+                document.getElementById('gameScoreVal').textContent = gameScore;
+                document.getElementById('gameStreakVal').textContent = gameStreak;
+
+                fb.className = "p-5 rounded-2xl border-2 border-emerald-400 bg-emerald-50 text-emerald-950 space-y-2 text-xs sm:text-sm";
+                fb.innerHTML = `
+                    <div class="font-black text-base text-emerald-800 flex items-center gap-1.5">
+                        <span>🎉</span> Luar Biasa! Jawabanmu Benar: ${formatVal(currentProb.ans)} ${toMeta.sym}
+                    </div>
+                    <div class="font-mono bg-white p-3 rounded-xl border border-emerald-200 text-xs leading-relaxed">
+                        <strong>Langkah Pembuktianmu:</strong><br>
+                        1. Selisih Titik Bawah = ${currentProb.val} - ${fromMeta.freeze} = ${formatVal(diff)}<br>
+                        2. Kalikan rasio (${toMeta.ratio}/${fromMeta.ratio}) & tambah ${toMeta.freeze} = <strong>${formatVal(currentProb.ans)} ${toMeta.sym}</strong>
+                    </div>
+                `;
+            } else {
+                playSound('wrong');
+                gameStreak = 0;
+                document.getElementById('gameStreakVal').textContent = gameStreak;
+
+                fb.className = "p-5 rounded-2xl border-2 border-rose-300 bg-rose-50 text-rose-950 space-y-2 text-xs sm:text-sm";
+                fb.innerHTML = `
+                    <div class="font-black text-base text-rose-800 flex items-center gap-1.5">
+                        <span>💪</span> Hampir Tepat! (Jawabanmu: ${uVal}, Yang Benar: ${formatVal(currentProb.ans)} ${toMeta.sym})
+                    </div>
+                    <div class="font-mono bg-white p-3 rounded-xl border border-rose-200 text-xs leading-relaxed">
+                        <strong>Mari Kita Bedah Langkahnya:</strong><br>
+                        1. Selisih Titik Bawah ${fromMeta.name} = ${currentProb.val} - ${fromMeta.freeze} = ${formatVal(diff)}<br>
+                        2. Kalikan rasio (${toMeta.ratio}/${fromMeta.ratio}) & tambah Titik Bawah ${toMeta.name} = <strong>${formatVal(currentProb.ans)} ${toMeta.sym}</strong><br>
+                        <span class="font-sans text-slate-600">Ayo klik <strong>"🎲 Soal Baru"</strong> dan coba lagi!</span>
+                    </div>
+                `;
+            }
+        }
+
+        // =========================================================================
+        // 11. ALUR 5 SUB-TAB D: TERMOMETER KREASI SISWA (SKALA X)
+        // =========================================================================
+        function renderCustomThermo() {
+            const name = document.getElementById('customNameInput').value || 'Kreasi';
+            const sym = document.getElementById('customSymInput').value || '°X';
+            const freezeX = parseFloat(document.getElementById('customFreezeInput').value) || 0;
+            const boilX = parseFloat(document.getElementById('customBoilInput').value) || 100;
+            const testC = parseFloat(document.getElementById('customTestSlider').value) || 0;
+
+            const rangeX = boilX - freezeX;
+            document.getElementById('customTestCLabel').textContent = `${testC} °C`;
+            document.getElementById('customScaleRangeInfo').textContent = `Rentang Skala ${name} = ${rangeX}`;
+
+            const box = document.getElementById('customMathOutput');
+            if (rangeX <= 0) {
+                box.innerHTML = `<div class="text-rose-400 font-bold">⚠️ Titik Didih harus lebih besar dari Titik Beku!</div>`;
+                return;
+            }
+
+            const ansX = ((testC - 0) / 100) * rangeX + freezeX;
+            box.innerHTML = `
+                <div class="text-purple-300 font-bold">// Rumus Perbandingan Celcius ke Termometer ${name} (${sym})</div>
+                <div>Perbandingan Garis: (T_${sym} - (${freezeX})) / ${rangeX} = (T_C - 0) / 100</div>
+                <div>Jika suhu benda diukur Celcius = <strong>${testC} °C</strong>:</div>
+                <div class="pl-3 text-amber-300">T_${sym} = ((${testC} / 100) × ${rangeX}) + (${freezeX})</div>
+                <div class="pl-3 text-emerald-400 font-black text-sm pt-1">🎯 Hasil Ukur Termometer ${name} = <strong>${formatVal(ansX)} ${sym}</strong></div>
+            `;
+        }
+
+        // =========================================================================
+        // 12. VIRTUAL SCRATCHPAD CANVAS (TOUCH & MOUSE DRAWING)
+        // =========================================================================
+        const sCanvas = document.getElementById('scratchpadCanvas');
+        const sCtx = sCanvas.getContext('2d');
+        let isDrawing = false;
+        let strokeColor = '#1e293b';
+
+        function toggleScratchpadModal() {
+            playSound('click');
+            const m = document.getElementById('scratchpadModal');
+            m.classList.toggle('hidden');
+            if (!m.classList.contains('hidden')) {
+                setTimeout(resizeScratchpad, 60);
+            }
+        }
+
+        function resizeScratchpad() {
+            const rect = sCanvas.parentElement.getBoundingClientRect();
+            sCanvas.width = rect.width;
+            sCanvas.height = rect.height;
+            sCtx.lineCap = 'round';
+            sCtx.lineJoin = 'round';
+            sCtx.lineWidth = 3;
+        }
+
+        function setScratchpadColor(c) {
+            playSound('click');
+            strokeColor = c;
+        }
+
+        function clearScratchpad() {
+            playSound('click');
+            sCtx.clearRect(0, 0, sCanvas.width, sCanvas.height);
+        }
+
+        function getCanvasPos(e) {
+            const rect = sCanvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        sCanvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            const p = getCanvasPos(e);
+            sCtx.beginPath();
+            sCtx.strokeStyle = strokeColor;
+            sCtx.moveTo(p.x, p.y);
+        });
+
+        sCanvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            const p = getCanvasPos(e);
+            sCtx.lineTo(p.x, p.y);
+            sCtx.stroke();
+        });
+
+        window.addEventListener('mouseup', () => { isDrawing = false; });
+
+        // Touch support for phones & tablets
+        sCanvas.addEventListener('touchstart', (e) => {
+            isDrawing = true;
+            const p = getCanvasPos(e);
+            sCtx.beginPath();
+            sCtx.strokeStyle = strokeColor;
+            sCtx.moveTo(p.x, p.y);
+            e.preventDefault();
+        }, { passive: false });
+
+        sCanvas.addEventListener('touchmove', (e) => {
+            if (!isDrawing) return;
+            const p = getCanvasPos(e);
+            sCtx.lineTo(p.x, p.y);
+            sCtx.stroke();
+            e.preventDefault();
+        }, { passive: false });
+
+        sCanvas.addEventListener('touchend', () => { isDrawing = false; });
+
+        // =========================================================================
+        // 13. INITIALIZE APP ON LOAD
+        // =========================================================================
+        window.onload = function () {
+            initAtoms();
+            goToStep(1);
+            changeParticleTemp(25);
+            changeZeroSim(27);
+            evaluateThermoMatch();
+            changeLabThermos(25);
+            solveStepByStep();
+            initNewProblem();
+            renderCustomThermo();
+            animateAtoms();
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                if (!document.getElementById('scratchpadModal').classList.contains('hidden')) {
+                    resizeScratchpad();
+                }
+            });
+        };
+    </script>
+</body>
+</html>
